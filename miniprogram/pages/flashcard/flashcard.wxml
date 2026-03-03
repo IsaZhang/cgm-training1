@@ -1,0 +1,32 @@
+<view class="container">
+  <view class="category-tabs">
+    <view wx:for="{{categories}}" wx:key="*this"
+      class="tab {{currentCategory === item ? 'active' : ''}}"
+      bindtap="switchCategory" data-cat="{{item}}">{{item}}</view>
+  </view>
+
+  <view class="progress-bar">
+    <text>{{masteredCount}}/{{currentCards.length}} 已掌握</text>
+  </view>
+
+  <view class="card flashcard {{flipped ? 'flipped' : ''}}" bindtap="flip" wx:if="{{currentCards.length > 0}}">
+    <view class="card-inner">
+      <view class="card-front">
+        <text class="card-label">问题</text>
+        <text class="card-text">{{currentCards[cardIndex].front}}</text>
+        <text class="hint">点击翻转</text>
+      </view>
+      <view class="card-back">
+        <text class="card-label">答案</text>
+        <text class="card-text">{{currentCards[cardIndex].back}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="actions" wx:if="{{flipped}}">
+    <view class="btn-weak" bindtap="markWeak">不熟</view>
+    <view class="btn-master" bindtap="markMaster">已掌握</view>
+  </view>
+
+  <view class="card-counter">{{cardIndex + 1}} / {{currentCards.length}}</view>
+</view>

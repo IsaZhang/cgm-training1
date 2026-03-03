@@ -1,0 +1,31 @@
+<view class="container">
+  <view class="stats card" wx:if="{{stats}}">
+    <view class="stat-row">
+      <view class="stat-item">
+        <text class="stat-num">{{stats.total_exams}}</text>
+        <text class="stat-label">考核次数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num pass">{{stats.passed}}</text>
+        <text class="stat-label">通过次数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{stats.first_pass_attempt || '-'}}</text>
+        <text class="stat-label">首次通过</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card record" wx:for="{{records}}" wx:key="id" bindtap="viewDetail" data-id="{{item.id}}">
+    <view class="record-header">
+      <text class="record-type">{{item.patient_type}}</text>
+      <text class="record-score {{item.passed ? 'pass' : 'fail'}}">{{item.score}}分</text>
+    </view>
+    <view class="record-info">
+      <text>{{item.passed ? '通过' : '未通过'}}</text>
+      <text class="record-time">{{item.created_at}}</text>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{records.length === 0}}">暂无考核记录</view>
+</view>

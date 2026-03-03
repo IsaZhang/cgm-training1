@@ -1,0 +1,17 @@
+.category-tabs { display: flex; flex-wrap: wrap; gap: 16rpx; margin-bottom: 24rpx; }
+.tab { padding: 12rpx 24rpx; background: #fff; border-radius: 8rpx; font-size: 26rpx; color: #666; }
+.tab.active { background: #4A90D9; color: #fff; }
+.progress-bar { font-size: 24rpx; color: #999; margin-bottom: 20rpx; }
+.flashcard { min-height: 400rpx; perspective: 1000rpx; }
+.card-inner { position: relative; min-height: 400rpx; transition: transform 0.5s; transform-style: preserve-3d; }
+.flipped .card-inner { transform: rotateY(180deg); }
+.card-front, .card-back { position: absolute; width: 100%; min-height: 400rpx; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; padding: 40rpx; box-sizing: border-box; }
+.card-back { transform: rotateY(180deg); }
+.card-label { font-size: 24rpx; color: #4A90D9; margin-bottom: 20rpx; }
+.card-text { font-size: 30rpx; line-height: 1.6; }
+.hint { font-size: 22rpx; color: #ccc; margin-top: 30rpx; text-align: center; }
+.actions { display: flex; gap: 24rpx; margin-top: 24rpx; }
+.btn-weak, .btn-master { flex: 1; padding: 24rpx; text-align: center; border-radius: 12rpx; font-size: 30rpx; }
+.btn-weak { background: #fee; color: #e55; }
+.btn-master { background: #efe; color: #5a5; }
+.card-counter { text-align: center; color: #999; font-size: 24rpx; margin-top: 20rpx; }

@@ -1,0 +1,9 @@
+.score-area { text-align: center; padding: 40rpx; }
+.score { font-size: 96rpx; font-weight: bold; display: block; }
+.pass { color: #4caf50; }
+.fail { color: #e53935; }
+.score-label { font-size: 28rpx; color: #666; }
+.dim-header { display: flex; justify-content: space-between; margin-bottom: 12rpx; }
+.dim-name { font-size: 28rpx; font-weight: bold; }
+.dim-score { font-size: 28rpx; color: #4A90D9; }
+.dim-comment { font-size: 26rpx; color: #666; line-height: 1.5; }

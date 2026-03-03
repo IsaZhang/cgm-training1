@@ -1,0 +1,39 @@
+<view class="container">
+  <block wx:if="{{!started}}">
+    <view class="mode-tag {{mode === 'practice' ? 'mode-practice' : 'mode-exam'}}">
+      {{mode === 'practice' ? '练习模式' : '考核模式'}}
+    </view>
+    <view class="patient-select">
+      <view class="card patient-card" wx:for="{{patients}}" wx:key="id"
+        bindtap="selectPatient" data-id="{{item.id}}">
+        <view style="flex:1">
+          <text class="patient-name">{{item.name}}</text>
+          <view class="patient-info">{{item.age}}岁 {{item.gender}} · {{item.diagnosis}}</view>
+          <view class="patient-info">用药：{{item.medication}}</view>
+        </view>
+        <text class="patient-tag">选择</text>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="mode-tag {{mode === 'practice' ? 'mode-practice' : 'mode-exam'}}">
+      {{mode === 'practice' ? '练习' : '考核'}} · {{patientName}}
+    </view>
+    <scroll-view scroll-y class="scroll-chat" scroll-into-view="msg-{{messages.length - 1}}">
+      <view class="chat-area">
+        <view wx:for="{{messages}}" wx:key="index"
+          id="msg-{{index}}" class="msg {{item.role === 'nurse' ? 'msg-nurse' : 'msg-patient'}}">
+          <view class="bubble">{{item.content}}</view>
+        </view>
+        <view class="loading" wx:if="{{loading}}">患者思考中...</view>
+      </view>
+    </scroll-view>
+    <view class="input-area">
+      <input class="msg-input" placeholder="输入你的话术..." value="{{inputText}}"
+        bindinput="onInput" confirm-type="send" bindconfirm="send" />
+      <view class="btn-send" bindtap="send">发送</view>
+      <view class="btn-end" bindtap="endChat">结束</view>
+    </view>
+  </block>
+</view>

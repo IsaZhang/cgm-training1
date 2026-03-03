@@ -1,0 +1,21 @@
+<view class="container">
+  <view class="score-area card">
+    <text class="score {{passed ? 'pass' : 'fail'}}">{{total}}</text>
+    <text class="score-label">{{passed ? '考核通过' : '未通过（80分及格）'}}</text>
+  </view>
+
+  <view class="card" wx:for="{{scoreList}}" wx:key="key">
+    <view class="dim-header">
+      <text class="dim-name">{{item.name}}</text>
+      <text class="dim-score">{{item.score}}/{{item.max}}</text>
+    </view>
+    <text class="dim-comment">{{item.comment}}</text>
+  </view>
+
+  <view class="card" wx:if="{{summary}}">
+    <text class="dim-name">总体评价</text>
+    <text class="dim-comment">{{summary}}</text>
+  </view>
+
+  <view class="btn-primary" bindtap="goBack">返回首页</view>
+</view>

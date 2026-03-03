@@ -1,0 +1,41 @@
+<view class="container">
+  <view class="logo-area">
+    <text class="title">CGM转化训练</text>
+    <text class="subtitle">照护师练习与考核平台</text>
+  </view>
+
+  <block wx:if="{{!loggedIn}}">
+    <view class="card">
+      <input class="input" placeholder="请输入姓名" bindinput="onNameInput" value="{{name}}" />
+      <input class="input" placeholder="请输入手机号" type="number" bindinput="onPhoneInput" value="{{phone}}" />
+      <view class="btn-primary" bindtap="login">登录</view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="welcome">你好，{{userInfo.name}}</view>
+    <view class="menu">
+      <view class="card menu-item" bindtap="goFlashcard">
+        <text class="menu-icon">📖</text>
+        <text class="menu-title">闪卡学习</text>
+        <text class="menu-desc">CGM基础知识学习</text>
+      </view>
+      <view class="card menu-item" bindtap="goPractice">
+        <text class="menu-icon">💬</text>
+        <text class="menu-title">对话练习</text>
+        <text class="menu-desc">模拟患者沟通，不计分</text>
+      </view>
+      <view class="card menu-item" bindtap="goExam">
+        <text class="menu-icon">📝</text>
+        <text class="menu-title">正式考核</text>
+        <text class="menu-desc">模拟转化场景，AI评分</text>
+      </view>
+      <view class="card menu-item" bindtap="goHistory">
+        <text class="menu-icon">📊</text>
+        <text class="menu-title">考核记录</text>
+        <text class="menu-desc">查看历史成绩和扣分详情</text>
+      </view>
+    </view>
+    <view class="logout" bindtap="logout">退出登录</view>
+  </block>
+</view>

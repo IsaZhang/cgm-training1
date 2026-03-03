@@ -1,0 +1,14 @@
+{
+  "libVersion": "3.14.3",
+  "projectname": "CGM%E8%BD%AC%E5%8C%96%E8%AE%AD%E7%BB%83",
+  "setting": {
+    "urlCheck": false,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": false,
+    "skylineRenderEnable": false,
+    "preloadBackgroundData": false,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "compileHotReLoad": true
+  }
+}

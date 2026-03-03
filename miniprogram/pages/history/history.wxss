@@ -1,0 +1,13 @@
+.stats { text-align: center; }
+.stat-row { display: flex; justify-content: space-around; }
+.stat-item { display: flex; flex-direction: column; align-items: center; }
+.stat-num { font-size: 48rpx; font-weight: bold; color: #333; }
+.stat-num.pass { color: #4caf50; }
+.stat-label { font-size: 24rpx; color: #999; margin-top: 8rpx; }
+.record-header { display: flex; justify-content: space-between; align-items: center; }
+.record-type { font-size: 30rpx; font-weight: bold; }
+.record-score { font-size: 32rpx; font-weight: bold; }
+.pass { color: #4caf50; }
+.fail { color: #e53935; }
+.record-info { display: flex; justify-content: space-between; margin-top: 12rpx; font-size: 24rpx; color: #999; }
+.empty { text-align: center; color: #ccc; padding: 60rpx; font-size: 28rpx; }

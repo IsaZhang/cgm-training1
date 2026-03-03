@@ -1,0 +1,28 @@
+# Node modules
+node_modules/
+server/node_modules/
+
+# Environment variables (重要：不要上传 API Key)
+.env
+server/.env
+
+# Local data
+server/store/
+*.log
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Build
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.swp
+cgm-server.tar.gz
+server.zip

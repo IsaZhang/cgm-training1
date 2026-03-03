@@ -1,0 +1,21 @@
+.patient-info { font-size: 24rpx; color: #666; line-height: 1.6; }
+.chat-area { flex: 1; padding-bottom: 20rpx; }
+.msg { display: flex; margin-bottom: 20rpx; }
+.msg-nurse { justify-content: flex-end; }
+.msg-patient { justify-content: flex-start; }
+.bubble { max-width: 70%; padding: 20rpx 24rpx; border-radius: 16rpx; font-size: 28rpx; line-height: 1.5; }
+.msg-nurse .bubble { background: #4A90D9; color: #fff; border-bottom-right-radius: 4rpx; }
+.msg-patient .bubble { background: #fff; color: #333; border-bottom-left-radius: 4rpx; }
+.input-area { display: flex; gap: 16rpx; padding: 20rpx 0; position: fixed; bottom: 0; left: 0; right: 0; padding: 20rpx 30rpx; background: #f5f5f5; }
+.msg-input { flex: 1; background: #fff; border-radius: 12rpx; padding: 16rpx 20rpx; font-size: 28rpx; min-height: 36rpx; }
+.btn-send { background: #4A90D9; color: #fff; border-radius: 12rpx; padding: 16rpx 30rpx; font-size: 28rpx; white-space: nowrap; }
+.btn-end { background: #e55; color: #fff; border-radius: 12rpx; padding: 16rpx 30rpx; font-size: 28rpx; white-space: nowrap; }
+.mode-tag { display: inline-block; padding: 6rpx 16rpx; border-radius: 6rpx; font-size: 22rpx; margin-bottom: 16rpx; }
+.mode-practice { background: #e8f5e9; color: #4caf50; }
+.mode-exam { background: #fce4ec; color: #e53935; }
+.patient-select { margin-bottom: 20rpx; }
+.patient-card { display: flex; align-items: center; }
+.patient-name { font-size: 30rpx; font-weight: bold; flex: 1; }
+.patient-tag { font-size: 22rpx; color: #999; }
+.loading { text-align: center; color: #999; font-size: 24rpx; padding: 20rpx; }
+.scroll-chat { height: calc(100vh - 280rpx); }
