@@ -39,7 +39,16 @@ router.post('/employees/import', async (req, res) => {
   let count = 0;
   for (const e of employees) {
     const exists = await db.find('employees', x => x.phone === e.phone);
-    if (!exists) { await db.insert('employees', { name: e.name, phone: e.phone, active: true }); count++; }
+    if (!exists) {
+      await db.insert('employees', {
+        name: e.name,
+        phone: e.phone,
+        city: e.city,
+        department: e.department,
+        active: e.active !== undefined ? e.active : true
+      });
+      count++;
+    }
   }
   res.json({ imported: count, total: employees.length });
 });
