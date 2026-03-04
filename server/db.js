@@ -1,54 +1,62 @@
-const fs = require('fs');
-const path = require('path');
+const cloudbase = require('@cloudbase/node-sdk');
 
-const DB_DIR = path.join(__dirname, 'store');
-if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR);
+// 初始化云开发
+const app = cloudbase.init({
+  env: process.env.TCB_ENV || process.env.ENV_ID,
+  secretId: process.env.TENCENTCLOUD_SECRETID,
+  secretKey: process.env.TENCENTCLOUD_SECRETKEY
+});
+const db = app.database();
+const _ = db.command;
 
-function getFile(name) {
-  const file = path.join(DB_DIR, `${name}.json`);
-  if (!fs.existsSync(file)) fs.writeFileSync(file, '[]');
-  return file;
-}
-
-function readAll(name) {
-  return JSON.parse(fs.readFileSync(getFile(name), 'utf-8'));
-}
-
-function writeAll(name, data) {
-  fs.writeFileSync(getFile(name), JSON.stringify(data, null, 2));
-}
+// 集合名映射
+const COLLECTIONS = {
+  users: 'users',
+  employees: 'employees',
+  flashcard_progress: 'flashcard_progress',
+  exam_records: 'exam_records'
+};
 
 async function find(name, fn) {
-  return readAll(name).find(fn);
+  const collection = db.collection(COLLECTIONS[name] || name);
+  const { data } = await collection.get();
+  return data.find(fn);
 }
 
 async function filter(name, fn) {
-  return readAll(name).filter(fn);
+  const collection = db.collection(COLLECTIONS[name] || name);
+  const { data } = await collection.get();
+  return data.filter(fn);
 }
 
 async function insert(name, record) {
-  const data = readAll(name);
-  data.push(record);
-  writeAll(name, data);
+  const collection = db.collection(COLLECTIONS[name] || name);
+  await collection.add(record);
   return record;
 }
 
 async function update(name, fn, updater) {
-  const data = readAll(name);
+  const collection = db.collection(COLLECTIONS[name] || name);
+  const { data } = await collection.get();
   let updated = false;
-  data.forEach((item, i) => {
-    if (fn(item)) { Object.assign(data[i], updater); updated = true; }
-  });
-  if (updated) writeAll(name, data);
+  for (const item of data) {
+    if (fn(item)) {
+      await collection.doc(item._id).update(updater);
+      updated = true;
+    }
+  }
   return updated;
 }
 
 async function upsert(name, fn, record) {
-  const data = readAll(name);
-  const idx = data.findIndex(fn);
-  if (idx >= 0) { Object.assign(data[idx], record); }
-  else { data.push(record); }
-  writeAll(name, data);
+  const collection = db.collection(COLLECTIONS[name] || name);
+  const { data } = await collection.get();
+  const existing = data.find(fn);
+  if (existing) {
+    await collection.doc(existing._id).update(record);
+  } else {
+    await collection.add(record);
+  }
 }
 
 module.exports = { find, filter, insert, update, upsert };
