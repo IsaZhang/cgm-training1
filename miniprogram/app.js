@@ -1,6 +1,6 @@
 App({
   globalData: {
-    baseUrl: 'http://localhost:3000/api',
+    baseUrl: 'https://prod-5gq02p6y6f0019c7-8adb286e3a-1407875349.ap-shanghai.app.tcloudbase.com/api',
     token: '',
     userInfo: null
   },
