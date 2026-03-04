@@ -11,6 +11,10 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 
+// 健康检查
+app.get('/', (req, res) => res.json({ status: 'ok' }));
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 // 公开接口
 app.use('/api/auth', authRoutes);
 
