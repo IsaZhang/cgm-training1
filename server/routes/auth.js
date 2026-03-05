@@ -5,24 +5,34 @@ const db = require('../db');
 const router = express.Router();
 
 router.post('/login', async (req, res) => {
-  const { name, phone } = req.body;
-  if (!name || !phone) return res.status(400).json({ error: '请输入姓名和手机号' });
+  try {
+    console.log('Login request:', req.body);
+    const { name, phone } = req.body;
+    if (!name || !phone) return res.status(400).json({ error: '请输入姓名和手机号' });
 
-  const employee = await db.find('employees', e => e.phone === phone && e.name === name && e.active !== false);
-  if (!employee) return res.status(401).json({ error: '未找到该员工信息，请联系管理员' });
+    console.log('Querying employee...');
+    const employee = await db.find('employees', e => e.phone === phone && e.name === name && e.active !== false);
+    console.log('Employee found:', !!employee);
+    if (!employee) return res.status(401).json({ error: '未找到该员工信息，请联系管理员' });
 
-  let user = await db.find('users', u => u.phone === phone);
-  const token = crypto.randomBytes(32).toString('hex');
+    console.log('Querying user...');
+    let user = await db.find('users', u => u.phone === phone);
+    const token = crypto.randomBytes(32).toString('hex');
 
-  if (!user) {
-    user = { id: uuidv4(), name, phone, token, created_at: new Date().toISOString() };
-    await db.insert('users', user);
-  } else {
-    await db.update('users', u => u.phone === phone, { token, last_login: new Date().toISOString() });
-    user.token = token;
+    if (!user) {
+      user = { id: uuidv4(), name, phone, token, created_at: new Date().toISOString() };
+      await db.insert('users', user);
+    } else {
+      await db.update('users', u => u.phone === phone, { token, last_login: new Date().toISOString() });
+      user.token = token;
+    }
+
+    console.log('Login successful');
+    res.json({ id: user.id, name: user.name, token });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: '登录失败', message: error.message });
   }
-
-  res.json({ id: user.id, name: user.name, token });
 });
 
 async function auth(req, res, next) {
