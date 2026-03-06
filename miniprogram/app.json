@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/flashcard/flashcard",
     "pages/chat/chat",
+    "pages/voice-exam/voice-exam",
     "pages/history/history",
     "pages/result/result"
   ],

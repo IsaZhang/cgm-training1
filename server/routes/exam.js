@@ -25,6 +25,30 @@ router.post('/submit', async (req, res) => {
   }
 });
 
+router.post('/submit-voice', async (req, res) => {
+  const { sessionId, patientType, conversation } = req.body;
+  const userId = req.user.id;
+  try {
+    const result = await scoreConversation(patientType, conversation);
+    const record = {
+      id: Date.now().toString(),
+      user_id: userId,
+      session_id: sessionId,
+      patient_type: patientType,
+      exam_type: 'voice',
+      score: result.total,
+      passed: result.passed,
+      deductions: result.scores,
+      conversation,
+      created_at: new Date().toISOString()
+    };
+    await db.insert('exam_records', record);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: '评分失败：' + e.message });
+  }
+});
+
 router.get('/history', async (req, res) => {
   const rows = await db.filter('exam_records', r => r.user_id === req.user.id);
   rows.sort((a, b) => b.created_at.localeCompare(a.created_at));

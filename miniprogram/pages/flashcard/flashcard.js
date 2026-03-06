@@ -50,7 +50,7 @@ Page({
   },
 
   updateMastered() {
-    const cards = this.data.currentCards;
+    const cards = this.data.currentCards || [];
     const p = this.data.progress;
     const count = cards.filter(c => p[c.id] && p[c.id].mastered).length;
     this.setData({ masteredCount: count });

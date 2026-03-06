@@ -18,11 +18,11 @@
 
   <view class="card record" wx:for="{{records}}" wx:key="id" bindtap="viewDetail" data-id="{{item.id}}">
     <view class="record-header">
-      <text class="record-type">{{item.patient_type}}</text>
+      <text class="record-type">{{item.exam_type === 'voice' ? '🎤 ' : ''}}{{item.patient_type}}</text>
       <text class="record-score {{item.passed ? 'pass' : 'fail'}}">{{item.score}}分</text>
     </view>
     <view class="record-info">
-      <text>{{item.passed ? '通过' : '未通过'}}</text>
+      <text>{{item.passed ? '通过' : '未通过'}}{{item.exam_type === 'voice' ? ' · 语音考核' : ''}}</text>
       <text class="record-time">{{item.created_at}}</text>
     </view>
   </view>

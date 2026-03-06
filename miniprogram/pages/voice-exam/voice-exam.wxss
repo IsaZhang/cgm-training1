@@ -1,0 +1,28 @@
+.container { display: flex; flex-direction: column; height: 100vh; background: #f5f5f5; }
+
+.patient-card { background: white; margin: 20rpx; padding: 30rpx; border-radius: 16rpx; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1); }
+.card-title { font-size: 32rpx; font-weight: bold; margin-bottom: 20rpx; color: #333; }
+.info-row { margin-bottom: 16rpx; font-size: 28rpx; line-height: 1.6; }
+.label { color: #666; font-weight: 500; }
+
+.status-bar { padding: 20rpx; text-align: center; }
+.status { display: inline-block; padding: 16rpx 40rpx; border-radius: 40rpx; font-size: 28rpx; }
+.status.idle { background: #e8e8e8; color: #999; }
+.status.listening { background: #ff4444; color: white; animation: pulse 1.5s infinite; }
+.status.processing { background: #ffa500; color: white; }
+.status.speaking { background: #4CAF50; color: white; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+.messages { flex: 1; padding: 20rpx; overflow-y: auto; }
+.message { margin-bottom: 24rpx; }
+.role-tag { display: block; font-size: 24rpx; color: #999; margin-bottom: 8rpx; }
+.message.nurse .role-tag { text-align: right; }
+.content { display: block; padding: 20rpx; border-radius: 12rpx; font-size: 28rpx; line-height: 1.5; }
+.message.nurse .content { background: #007aff; color: white; margin-left: 100rpx; }
+.message.patient .content { background: white; margin-right: 100rpx; }
+
+.controls { padding: 30rpx; }
+.btn-start, .btn-end { width: 100%; height: 100rpx; border-radius: 50rpx; font-size: 32rpx; }
+.btn-start { background: #007aff; color: white; }
+.btn-end { background: #ff4444; color: white; }

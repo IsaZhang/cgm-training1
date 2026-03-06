@@ -38,6 +38,7 @@ Page({
   goFlashcard() { wx.navigateTo({ url: '/pages/flashcard/flashcard' }); },
   goPractice() { wx.navigateTo({ url: '/pages/chat/chat?mode=practice' }); },
   goExam() { wx.navigateTo({ url: '/pages/chat/chat?mode=exam' }); },
+  goVoiceExam() { wx.navigateTo({ url: '/pages/voice-exam/voice-exam' }); },
   goHistory() { wx.navigateTo({ url: '/pages/history/history' }); },
 
   logout() {

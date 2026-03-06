@@ -1,0 +1,50 @@
+<view class="container">
+  <!-- 患者资料卡片 -->
+  <view class="patient-card" wx:if="{{patient}}">
+    <view class="card-title">患者资料</view>
+    <view class="info-row">
+      <text class="label">姓名：</text>
+      <text>{{patient.name}} {{patient.age}}岁 {{patient.gender}}</text>
+    </view>
+    <view class="info-row">
+      <text class="label">诊断：</text>
+      <text>{{patient.diagnosis}}</text>
+    </view>
+    <view class="info-row">
+      <text class="label">用药：</text>
+      <text>{{patient.medication}}</text>
+    </view>
+    <view class="info-row" wx:if="{{patient.recommended_cgm_count}}">
+      <text class="label">推荐台数：</text>
+      <text style="color:#ff4444;font-weight:bold;">{{patient.recommended_cgm_count}}台CGM</text>
+    </view>
+    <view class="info-row" wx:if="{{patient.conversion_keys}}">
+      <text class="label">转化要点：</text>
+      <text>{{patient.conversion_keys.join('、')}}</text>
+    </view>
+  </view>
+
+  <!-- 对话状态 -->
+  <view class="status-bar">
+    <view class="status {{status}}">
+      <text wx:if="{{status === 'listening'}}">🎤 正在聆听...</text>
+      <text wx:elif="{{status === 'processing'}}">⏳ 处理中...</text>
+      <text wx:elif="{{status === 'speaking'}}">🔊 AI回复中...</text>
+      <text wx:else="{{status === 'idle'}}">💬 等待对话</text>
+    </view>
+  </view>
+
+  <!-- 对话记录 -->
+  <scroll-view class="messages" scroll-y scroll-into-view="msg-{{messages.length - 1}}">
+    <view wx:for="{{messages}}" wx:key="index" id="msg-{{index}}" class="message {{item.role}}">
+      <text class="role-tag">{{item.role === 'nurse' ? '我' : '患者'}}</text>
+      <text class="content">{{item.content}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 控制按钮 -->
+  <view class="controls">
+    <button wx:if="{{!started}}" class="btn-start" bindtap="startExam">开始考核</button>
+    <button wx:else class="btn-end" bindtap="endExam">结束考核</button>
+  </view>
+</view>

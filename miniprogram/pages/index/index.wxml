@@ -30,6 +30,11 @@
         <text class="menu-title">正式考核</text>
         <text class="menu-desc">模拟转化场景，AI评分</text>
       </view>
+      <view class="card menu-item" bindtap="goVoiceExam">
+        <text class="menu-icon">🎤</text>
+        <text class="menu-title">语音考核</text>
+        <text class="menu-desc">真实语音对话，更接近实战</text>
+      </view>
       <view class="card menu-item" bindtap="goHistory">
         <text class="menu-icon">📊</text>
         <text class="menu-title">考核记录</text>

@@ -5,6 +5,7 @@ const { router: authRoutes, auth } = require('./routes/auth');
 const flashcardRoutes = require('./routes/flashcard');
 const chatRoutes = require('./routes/chat');
 const examRoutes = require('./routes/exam');
+const voiceRoutes = require('./routes/voice');
 const statsRoutes = require('./routes/stats');
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/flashcard', auth, flashcardRoutes);
 app.use('/api/chat', auth, chatRoutes);
 app.use('/api/exam', auth, examRoutes);
+app.use('/api/voice', auth, voiceRoutes);
 
 // 统计接口（公开，方便管理员查看）
 app.use('/api/stats', statsRoutes);
