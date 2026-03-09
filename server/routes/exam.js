@@ -4,7 +4,7 @@ const db = require('../db');
 const { scoreConversation } = require('../services/scoring');
 
 router.post('/submit', async (req, res) => {
-  const { patient_type, conversation } = req.body;
+  const { patient_type, conversation, exam_type } = req.body;
   const userId = req.user.id;
   try {
     const result = await scoreConversation(patient_type, conversation);
@@ -12,6 +12,7 @@ router.post('/submit', async (req, res) => {
       id: Date.now().toString(),
       user_id: userId,
       patient_type,
+      exam_type: exam_type || 'text',
       score: result.total,
       passed: result.passed,
       deductions: result.scores,

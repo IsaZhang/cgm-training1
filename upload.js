@@ -5,7 +5,7 @@ const project = new ci.Project({
   appid: 'wx0b17eab2709852be',
   type: 'miniProgram',
   projectPath: path.resolve(__dirname, 'miniprogram'),
-  privateKeyPath: path.resolve(__dirname, 'private.key'),
+  privateKeyPath: path.resolve(__dirname, 'private.wx0b17eab2709852be.key'),
   ignores: ['node_modules/**/*']
 });
 
