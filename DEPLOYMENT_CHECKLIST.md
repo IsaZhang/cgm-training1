@@ -46,13 +46,14 @@
 **必需变量**：
 - LLM_PROVIDER=qwen
 - LLM_API_KEY=（通义千问密钥）
+- ADMIN_TOKEN=（管理员口令：员工导入/统计接口需要）
 - ENV_ID=（如果用云数据库）
 - TENCENTCLOUD_SECRETID=（如果用云数据库）
 - TENCENTCLOUD_SECRETKEY=（如果用云数据库）
 
 ### 3. 小程序域名配置
 **当前配置**：https://cgm-training-229253-5-1407875349.sh.run.tcloudbase.com
-**需要修改**：部署到新服务器后需要更新miniprogram/app.js中的baseUrl
+**需要修改**：部署到新服务器后需要更新小程序的 `baseUrl`（可通过 Storage 覆盖或修改 `miniprogram/app.js`）
 
 ---
 

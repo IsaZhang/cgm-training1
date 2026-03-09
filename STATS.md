@@ -19,6 +19,7 @@
 ```bash
 curl -X POST http://localhost:3000/api/auth/employees/import \
   -H "Content-Type: application/json" \
+  -H "x-admin-token: $ADMIN_TOKEN" \
   -d '{
     "employees": [
       {"name": "张三", "phone": "13800000001", "city": "北京", "department": "运营一部"},
@@ -46,7 +47,7 @@ curl -X POST http://localhost:3000/api/auth/employees/import \
 
 **使用示例**：
 ```bash
-curl http://localhost:3000/api/stats/overview
+curl http://localhost:3000/api/stats/overview -H "x-admin-token: $ADMIN_TOKEN"
 ```
 
 ### 2. 按城市/部门统计
@@ -74,7 +75,7 @@ curl http://localhost:3000/api/stats/overview
 
 **使用示例**：
 ```bash
-curl http://localhost:3000/api/stats/by-region
+curl http://localhost:3000/api/stats/by-region -H "x-admin-token: $ADMIN_TOKEN"
 ```
 
 ### 3. 导出 CSV 数据
@@ -96,10 +97,10 @@ curl http://localhost:3000/api/stats/by-region
 **使用示例**：
 ```bash
 # 下载到本地
-curl http://localhost:3000/api/stats/export -o stats.csv
+curl http://localhost:3000/api/stats/export -H "x-admin-token: $ADMIN_TOKEN" -o stats.csv
 
 # 在浏览器中直接访问
-open http://localhost:3000/api/stats/export
+open "http://localhost:3000/api/stats/export?admin_token=$ADMIN_TOKEN"
 ```
 
 ### 4. 详细考核记录
@@ -129,14 +130,14 @@ open http://localhost:3000/api/stats/export
 
 **使用示例**：
 ```bash
-curl http://localhost:3000/api/stats/exam-details
+curl http://localhost:3000/api/stats/exam-details -H "x-admin-token: $ADMIN_TOKEN"
 ```
 
 ## 三、数据分析场景
 
 ### 场景1：对比不同城市的培训效果
 ```bash
-curl http://localhost:3000/api/stats/by-region | python3 -c "
+curl http://localhost:3000/api/stats/by-region -H "x-admin-token: $ADMIN_TOKEN" | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
 for city in sorted(data, key=lambda x: float(x['avg_score']), reverse=True):
@@ -145,13 +146,13 @@ for city in sorted(data, key=lambda x: float(x['avg_score']), reverse=True):
 
 ### 场景2：找出需要重点培训的员工
 ```bash
-curl http://localhost:3000/api/stats/export -o stats.csv
+curl http://localhost:3000/api/stats/export -H "x-admin-token: $ADMIN_TOKEN" -o stats.csv
 # 用 Excel 打开 stats.csv，按平均分排序，找出低分员工
 ```
 
 ### 场景3：分析各维度得分情况
 ```bash
-curl http://localhost:3000/api/stats/exam-details | python3 -c "
+curl http://localhost:3000/api/stats/exam-details -H "x-admin-token: $ADMIN_TOKEN" | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
 # 统计各维度平均分
@@ -178,6 +179,6 @@ curl https://cgm-training-api-xxx.ap-shanghai.run.tcb.qq.com/api/stats/overview
 
 ## 五、注意事项
 
-1. **数据隐私**：统计接口目前是公开的，部署到生产环境后建议加上管理员权限验证
+1. **数据隐私**：统计/员工导入接口需要管理员口令（请求头 `x-admin-token`），请妥善保管 `ADMIN_TOKEN`
 2. **数据备份**：定期导出 CSV 数据进行备份
 3. **城市/部门字段**：导入员工时务必填写完整，否则统计时会显示"未知"

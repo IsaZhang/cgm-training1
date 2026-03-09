@@ -6,16 +6,12 @@ const router = express.Router();
 
 router.post('/login', async (req, res) => {
   try {
-    console.log('Login request:', req.body);
     const { name, phone } = req.body;
     if (!name || !phone) return res.status(400).json({ error: '请输入姓名和手机号' });
 
-    console.log('Querying employee...');
     const employee = await db.find('employees', e => e.phone === phone && e.name === name && e.active !== false);
-    console.log('Employee found:', !!employee);
     if (!employee) return res.status(401).json({ error: '未找到该员工信息，请联系管理员' });
 
-    console.log('Querying user...');
     let user = await db.find('users', u => u.phone === phone);
     const token = crypto.randomBytes(32).toString('hex');
 
@@ -27,7 +23,6 @@ router.post('/login', async (req, res) => {
       user.token = token;
     }
 
-    console.log('Login successful');
     res.json({ id: user.id, name: user.name, token });
   } catch (error) {
     console.error('Login error:', error);
@@ -44,7 +39,15 @@ async function auth(req, res, next) {
   next();
 }
 
-router.post('/employees/import', async (req, res) => {
+function adminAuth(req, res, next) {
+  const configured = process.env.ADMIN_TOKEN;
+  if (!configured) return res.status(403).json({ error: '管理员接口未配置' });
+  const token = req.headers['x-admin-token'] || req.query.admin_token;
+  if (!token || token !== configured) return res.status(403).json({ error: '无管理员权限' });
+  next();
+}
+
+router.post('/employees/import', adminAuth, async (req, res) => {
   const { employees } = req.body;
   let count = 0;
   for (const e of employees) {
@@ -63,4 +66,4 @@ router.post('/employees/import', async (req, res) => {
   res.json({ imported: count, total: employees.length });
 });
 
-module.exports = { router, auth };
+module.exports = { router, auth, adminAuth };

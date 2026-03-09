@@ -28,13 +28,15 @@ router.post('/chat', async (req, res) => {
   if (!patient) return res.status(400).json({ error: '患者不存在' });
 
   try {
+    const safeHistory = Array.isArray(history) ? history : [];
     // 构建对话消息
     const messages = [
       { role: 'system', content: patient.system_prompt },
-      ...(history || []).map(m => ({
+      ...safeHistory.map(m => ({
         role: m.role === 'nurse' ? 'user' : 'assistant',
         content: m.content
-      }))
+      })),
+      ...(message ? [{ role: 'user', content: message }] : [])
     ];
 
     // 获取AI回复
@@ -44,7 +46,7 @@ router.post('/chat', async (req, res) => {
     const audioUrl = await textToSpeech(reply);
 
     // 保存会话
-    sessions.set(sessionId, { patientId, history: [...history, { role: 'patient', content: reply }] });
+    sessions.set(sessionId, { patientId, history: [...safeHistory, { role: 'patient', content: reply }] });
 
     res.json({ reply, audioUrl, sessionId });
   } catch (e) {

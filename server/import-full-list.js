@@ -100,7 +100,10 @@ async function importEmployees() {
   console.log(`准备导入 ${employees.length} 名员工...`);
   const response = await fetch('http://localhost:3000/api/auth/employees/import', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(process.env.ADMIN_TOKEN ? { 'x-admin-token': process.env.ADMIN_TOKEN } : {})
+    },
     body: JSON.stringify({ employees })
   });
   const result = await response.json();

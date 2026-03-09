@@ -17,6 +17,7 @@ npm install
 LLM_PROVIDER=qwen
 LLM_API_KEY=你的通义千问API密钥
 PORT=3000
+ADMIN_TOKEN=设置一个管理员口令（用于导入员工/查看统计）
 ```
 
 ### 2.3 启动服务
@@ -37,6 +38,7 @@ npm start
 ```bash
 curl -X POST http://localhost:3000/api/auth/employees/import \
   -H "Content-Type: application/json" \
+  -H "x-admin-token: $ADMIN_TOKEN" \
   -d @employees-data.json
 ```
 
@@ -55,9 +57,11 @@ curl http://localhost:3000/
 
 ## 5. 小程序配置
 
-部署成功后，修改小程序代码：
-- 文件：miniprogram/app.js
-- 修改第3行的baseUrl为你的服务器地址
+部署成功后，小程序请求地址需要指向你的服务器：
+
+- **推荐（无需改代码）**：在微信开发者工具 Console 执行  
+  `wx.setStorageSync('baseUrl', 'http://你的服务器:3000/api')`
+- **或（改代码）**：修改 `miniprogram/app.js` 里的 `globalData.baseUrl`
 
 ## 6. 数据存储
 

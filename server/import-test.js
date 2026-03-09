@@ -10,7 +10,10 @@ const req = http.request({
   hostname: 'localhost', port: 3000,
   path: '/api/auth/employees/import',
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' }
+  headers: {
+    'Content-Type': 'application/json',
+    ...(process.env.ADMIN_TOKEN ? { 'x-admin-token': process.env.ADMIN_TOKEN } : {})
+  }
 }, (res) => {
   let body = '';
   res.on('data', c => body += c);

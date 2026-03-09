@@ -36,7 +36,7 @@
 - [ ] /api/flashcard/* - 知识卡片
 - [ ] /api/chat/* - AI对话
 - [ ] /api/exam/* - 考核
-- [ ] /api/stats/* - 统计
+- [ ] /api/stats/* - 统计（管理员口令）
 
 ### 2.2 数据库
 - [ ] 本地存储配置正确
