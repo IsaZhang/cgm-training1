@@ -4,7 +4,7 @@ Page({
   data: {
     categories: [], currentCategory: '', currentCards: [],
     allCards: {}, cardIndex: 0, flipped: false,
-    progress: {}, masteredCount: 0
+    progress: {}, masteredCount: 0, showList: false
   },
 
   async onLoad() {
@@ -23,7 +23,7 @@ Page({
     const cat = e.currentTarget.dataset.cat;
     this.setData({
       currentCategory: cat, currentCards: this.data.allCards[cat] || [],
-      cardIndex: 0, flipped: false
+      cardIndex: 0, flipped: false, showList: false
     });
     this.updateMastered();
   },
@@ -47,6 +47,15 @@ Page({
     let next = this.data.cardIndex + 1;
     if (next >= this.data.currentCards.length) next = 0;
     this.setData({ cardIndex: next, flipped: false });
+  },
+
+  toggleList() {
+    this.setData({ showList: !this.data.showList });
+  },
+
+  jumpToCard(e) {
+    const index = e.currentTarget.dataset.index;
+    this.setData({ cardIndex: index, flipped: false, showList: false });
   },
 
   updateMastered() {

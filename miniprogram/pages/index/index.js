@@ -2,7 +2,7 @@ const { request } = require('../../utils/api');
 const app = getApp();
 
 Page({
-  data: { loggedIn: false, name: '', phone: '', userInfo: null },
+  data: { loggedIn: false, showLogin: false, name: '', phone: '', userInfo: null },
 
   onLoad() {
     if (app.globalData.token) {
@@ -14,6 +14,14 @@ Page({
     if (app.globalData.token) {
       this.setData({ loggedIn: true, userInfo: app.globalData.userInfo });
     }
+  },
+
+  showLoginForm() {
+    this.setData({ showLogin: true });
+  },
+
+  cancelLogin() {
+    this.setData({ showLogin: false });
   },
 
   onNameInput(e) { this.setData({ name: e.detail.value }); },
@@ -29,15 +37,14 @@ Page({
       app.globalData.userInfo = { id: res.id, name: res.name };
       wx.setStorageSync('token', res.token);
       wx.setStorageSync('userInfo', app.globalData.userInfo);
-      this.setData({ loggedIn: true, userInfo: app.globalData.userInfo });
+      this.setData({ loggedIn: true, userInfo: app.globalData.userInfo, showLogin: false });
     } catch (e) {
       wx.showToast({ title: '登录失败', icon: 'none' });
     }
   },
 
   goFlashcard() { wx.navigateTo({ url: '/pages/flashcard/flashcard' }); },
-  goPractice() { wx.navigateTo({ url: '/pages/chat/chat?mode=practice' }); },
-  goExam() { wx.navigateTo({ url: '/pages/chat/chat?mode=exam' }); },
+  goExam() { wx.navigateTo({ url: '/pages/chat/chat' }); },
   goVoiceExam() { wx.navigateTo({ url: '/pages/voice-exam/voice-exam' }); },
   goHistory() { wx.navigateTo({ url: '/pages/history/history' }); },
 

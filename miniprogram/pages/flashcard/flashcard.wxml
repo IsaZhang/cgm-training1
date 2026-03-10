@@ -5,11 +5,17 @@
       bindtap="switchCategory" data-cat="{{item}}">{{item}}</view>
   </view>
 
-  <view class="progress-bar">
-    <text>{{masteredCount}}/{{currentCards.length}} 已掌握</text>
+  <view class="progress-section">
+    <view class="progress-text">{{masteredCount}}/{{currentCards.length}} 已掌握</view>
+    <view class="progress-bar-bg">
+      <view class="progress-bar-fill" style="width: {{masteredCount / currentCards.length * 100}}%"></view>
+    </view>
   </view>
 
   <view class="card flashcard {{flipped ? 'flipped' : ''}}" bindtap="flip" wx:if="{{currentCards.length > 0}}">
+    <view class="status-badge {{progress[currentCards[cardIndex].id] ? (progress[currentCards[cardIndex].id].mastered ? 'mastered' : 'weak') : 'new'}}">
+      {{progress[currentCards[cardIndex].id] ? (progress[currentCards[cardIndex].id].mastered ? '✓ 已掌握' : '⚠ 不熟') : '新卡片'}}
+    </view>
     <view class="card-inner">
       <view class="card-front">
         <text class="card-label">问题</text>
@@ -29,4 +35,17 @@
   </view>
 
   <view class="card-counter">{{cardIndex + 1}} / {{currentCards.length}}</view>
+
+  <view class="card-list-toggle" bindtap="toggleList">
+    {{showList ? '隐藏' : '查看'}}卡片列表
+  </view>
+
+  <view class="card-list" wx:if="{{showList}}">
+    <view wx:for="{{currentCards}}" wx:key="id"
+      class="card-list-item {{progress[item.id] ? (progress[item.id].mastered ? 'mastered' : 'weak') : 'new'}}"
+      bindtap="jumpToCard" data-index="{{index}}">
+      <text class="card-list-icon">{{progress[item.id] ? (progress[item.id].mastered ? '✓' : '⚠') : '○'}}</text>
+      <text class="card-list-text">{{item.front}}</text>
+    </view>
+  </view>
 </view>

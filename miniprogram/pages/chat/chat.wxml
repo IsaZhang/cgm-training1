@@ -1,8 +1,6 @@
 <view class="container">
   <block wx:if="{{!started}}">
-    <view class="mode-tag {{mode === 'practice' ? 'mode-practice' : 'mode-exam'}}">
-      {{mode === 'practice' ? '练习模式' : '考核模式'}}
-    </view>
+    <view class="mode-tag mode-exam">留言考核</view>
     <view class="patient-select">
       <view class="card patient-card" wx:for="{{patients}}" wx:key="id"
         bindtap="selectPatient" data-id="{{item.id}}">
@@ -17,9 +15,7 @@
   </block>
 
   <block wx:else>
-    <view class="mode-tag {{mode === 'practice' ? 'mode-practice' : 'mode-exam'}}">
-      {{mode === 'practice' ? '练习' : '考核'}} · {{patientName}}
-    </view>
+    <view class="mode-tag mode-exam">留言考核 · {{patientName}}</view>
     <scroll-view scroll-y class="scroll-chat" scroll-into-view="msg-{{messages.length - 1}}">
       <view class="chat-area">
         <view wx:for="{{messages}}" wx:key="index"

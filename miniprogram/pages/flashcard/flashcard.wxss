@@ -1,8 +1,15 @@
 .category-tabs { display: flex; flex-wrap: wrap; gap: 16rpx; margin-bottom: 24rpx; }
 .tab { padding: 12rpx 24rpx; background: #fff; border-radius: 8rpx; font-size: 26rpx; color: #666; }
 .tab.active { background: #4A90D9; color: #fff; }
-.progress-bar { font-size: 24rpx; color: #999; margin-bottom: 20rpx; }
-.flashcard { min-height: 400rpx; perspective: 1000rpx; }
+.progress-section { margin-bottom: 20rpx; }
+.progress-text { font-size: 24rpx; color: #666; margin-bottom: 10rpx; }
+.progress-bar-bg { height: 8rpx; background: #eee; border-radius: 4rpx; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: #4A90D9; transition: width 0.3s; }
+.flashcard { min-height: 400rpx; perspective: 1000rpx; position: relative; }
+.status-badge { position: absolute; top: 20rpx; right: 20rpx; padding: 8rpx 16rpx; border-radius: 20rpx; font-size: 22rpx; z-index: 10; }
+.status-badge.mastered { background: #efe; color: #5a5; }
+.status-badge.weak { background: #fee; color: #e55; }
+.status-badge.new { background: #eef; color: #59a; }
 .card-inner { position: relative; min-height: 400rpx; transition: transform 0.5s; transform-style: preserve-3d; }
 .flipped .card-inner { transform: rotateY(180deg); }
 .card-front, .card-back { position: absolute; width: 100%; min-height: 400rpx; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; padding: 40rpx; box-sizing: border-box; }
@@ -15,3 +22,11 @@
 .btn-weak { background: #fee; color: #e55; }
 .btn-master { background: #efe; color: #5a5; }
 .card-counter { text-align: center; color: #999; font-size: 24rpx; margin-top: 20rpx; }
+.card-list-toggle { text-align: center; color: #4A90D9; font-size: 26rpx; margin-top: 30rpx; padding: 20rpx; }
+.card-list { margin-top: 20rpx; }
+.card-list-item { display: flex; align-items: center; padding: 20rpx; background: #fff; border-radius: 8rpx; margin-bottom: 12rpx; }
+.card-list-item.mastered { border-left: 4rpx solid #5a5; }
+.card-list-item.weak { border-left: 4rpx solid #e55; }
+.card-list-item.new { border-left: 4rpx solid #59a; }
+.card-list-icon { font-size: 28rpx; margin-right: 16rpx; }
+.card-list-text { font-size: 26rpx; color: #333; flex: 1; }

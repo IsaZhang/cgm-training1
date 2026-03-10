@@ -26,3 +26,8 @@ build/
 *.swp
 cgm-server.tar.gz
 server.zip
+
+# 微信小程序密钥（重要：不要上传）
+private.key
+private.*.key
+*.key

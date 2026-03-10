@@ -2,14 +2,13 @@ const { request } = require('../../utils/api');
 
 Page({
   data: {
-    mode: 'practice', started: false, patients: [],
+    started: false, patients: [],
     patientId: '', patientName: '', messages: [],
     inputText: '', loading: false
   },
 
-  onLoad(opts) {
-    this.setData({ mode: opts.mode || 'practice' });
-    wx.setNavigationBarTitle({ title: opts.mode === 'exam' ? '正式考核' : '对话练习' });
+  onLoad() {
+    wx.setNavigationBarTitle({ title: '留言考核' });
     this.loadPatients();
   },
 
@@ -50,13 +49,6 @@ Page({
   },
 
   async endChat() {
-    if (this.data.mode === 'practice') {
-      wx.showModal({
-        title: '练习结束', content: '本次练习不计分，继续加油！',
-        showCancel: false, success: () => wx.navigateBack()
-      });
-      return;
-    }
     wx.showModal({
       title: '提交考核', content: '确认结束对话并提交评分？',
       success: async (res) => {
@@ -65,7 +57,11 @@ Page({
         try {
           const result = await request('/exam/submit', {
             method: 'POST',
-            data: { patient_type: this.data.patientName, conversation: this.data.messages }
+            data: {
+              patient_type: this.data.patientName,
+              conversation: this.data.messages,
+              exam_type: 'text'
+            }
           });
           wx.hideLoading();
           wx.redirectTo({

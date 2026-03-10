@@ -1,0 +1,25 @@
+{
+  "name": "cgm-training",
+  "version": "1.0.0",
+  "description": "一个用于培训照护师进行 CGM（动态血糖监测）销售转化的微信小程序系统。",
+  "main": "upload.js",
+  "scripts": {
+    "upload": "node upload.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IsaZhang/cgm-training.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/IsaZhang/cgm-training/issues"
+  },
+  "homepage": "https://github.com/IsaZhang/cgm-training#readme",
+  "devDependencies": {
+    "miniprogram-ci": "^2.1.26"
+  }
+}
