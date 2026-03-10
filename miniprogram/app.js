@@ -1,6 +1,7 @@
 App({
   globalData: {
-    baseUrl: 'https://cgm-training-229253-5-1407875349.sh.run.tcloudbase.com/api',
+    // baseUrl: 'http://localhost:3000/api',
+    baseUrl: 'https://ai-cgm.phrones.com/api',
     token: '',
     userInfo: null
   },

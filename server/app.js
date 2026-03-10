@@ -11,6 +11,7 @@ const statsRoutes = require('./routes/stats');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true })); // 支持 form-urlencoded（curl -d）
 
 // 健康检查
 app.get('/', (req, res) => res.json({ status: 'ok' }));
