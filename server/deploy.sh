@@ -42,7 +42,7 @@ echo "✓ 目录已就绪"
 # 3. 同步代码（使用 tar，不依赖 rsync）
 echo ""
 echo "[3/4] 同步代码..."
-tar --exclude='node_modules' --exclude='.env' --exclude='.git' --exclude='deploy.conf' --exclude='*.log' -cf - . | ssh $SSH_OPTS $REMOTE "mkdir -p $REMOTE_PATH && cd $REMOTE_PATH && tar -xf -"
+tar --exclude='node_modules' --exclude='.env' --exclude='.git' --exclude='deploy.conf' --exclude='*.log' --exclude='store' -cf - . | ssh $SSH_OPTS $REMOTE "mkdir -p $REMOTE_PATH && cd $REMOTE_PATH && tar -xf -"
 echo "✓ 代码同步完成"
 
 # 4. 远程安装依赖并启动（加载 nvm 以使用 Node.js）
