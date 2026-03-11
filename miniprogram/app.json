@@ -1,6 +1,8 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/agreement/agreement",
+    "pages/privacy/privacy",
     "pages/flashcard/flashcard",
     "pages/chat/chat",
     "pages/voice-exam/voice-exam",

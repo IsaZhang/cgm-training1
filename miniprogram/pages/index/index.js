@@ -2,7 +2,7 @@ const { request } = require('../../utils/api');
 const app = getApp();
 
 Page({
-  data: { loggedIn: false, showLogin: false, name: '', phone: '', userInfo: null },
+  data: { loggedIn: false, showLogin: false, name: '', phone: '', userInfo: null, agreed: false },
 
   onLoad() {
     if (app.globalData.token) {
@@ -24,12 +24,25 @@ Page({
     this.setData({ showLogin: false });
   },
 
+  toggleAgreed() {
+    this.setData({ agreed: !this.data.agreed });
+  },
+
+  showAgreement() {
+    wx.navigateTo({ url: '/pages/agreement/agreement' });
+  },
+
+  showPrivacy() {
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
+  },
+
   onNameInput(e) { this.setData({ name: e.detail.value }); },
   onPhoneInput(e) { this.setData({ phone: e.detail.value }); },
 
   async login() {
-    const { name, phone } = this.data;
+    const { name, phone, agreed } = this.data;
     if (!name || !phone) return wx.showToast({ title: '请填写完整', icon: 'none' });
+    if (!agreed) return wx.showToast({ title: '请先阅读并同意用户协议和隐私声明', icon: 'none' });
     try {
       const res = await request('/auth/login', { method: 'POST', data: { name, phone } });
       if (res.error) return wx.showToast({ title: res.error, icon: 'none' });

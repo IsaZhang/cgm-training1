@@ -1,0 +1,3 @@
+.container { padding: 40rpx; height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; }
+.title { font-size: 36rpx; font-weight: bold; margin-bottom: 30rpx; color: #333; flex-shrink: 0; }
+.content { flex: 1; height: 0; font-size: 28rpx; line-height: 1.8; color: #666; white-space: pre-wrap; }
