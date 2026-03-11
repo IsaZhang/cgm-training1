@@ -15,6 +15,12 @@
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f5f5f5"
   },
+  "permission": {
+    "scope.record": {
+      "desc": "用于录制语音，实现照护师与模拟患者的语音对话"
+    }
+  },
+  "requiredPrivateInfos": ["getRecorderManager"],
   "style": "v2",
   "sitemapLocation": "sitemap.json"
 }
