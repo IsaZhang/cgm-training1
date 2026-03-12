@@ -21,6 +21,9 @@ server/store/
 dist/
 build/
 
+# 部署时由 web/ 复制生成，不提交
+server/public/
+
 # Temporary files
 *.tmp
 *.swp

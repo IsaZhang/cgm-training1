@@ -1,10 +1,11 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { router: authRoutes, auth, adminAuth } = require('./routes/auth');
 const flashcardRoutes = require('./routes/flashcard');
 const chatRoutes = require('./routes/chat');
-const examRoutes = require('./routes/exam');
+const { router: examRoutes, adminRouter: examAdminRoutes } = require('./routes/exam');
 const voiceRoutes = require('./routes/voice');
 const statsRoutes = require('./routes/stats');
 
@@ -23,6 +24,10 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true })); // 支持 form-urlencoded（curl -d）
+
+// Web 管理后台静态文件（admin-exam.html 等）
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir));
 
 // 健康检查
 app.get('/', (req, res) => res.json({ status: 'ok' }));
@@ -48,6 +53,7 @@ app.use('/api/auth', authRoutes);
 // 需要登录的接口
 app.use('/api/flashcard', auth, flashcardRoutes);
 app.use('/api/chat', auth, chatRoutes);
+app.use('/api/exam/admin', examAdminRoutes);  // 管理员接口，不经过 auth
 app.use('/api/exam', auth, examRoutes);
 app.use('/api/voice', auth, voiceRoutes);
 

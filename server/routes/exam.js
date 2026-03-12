@@ -79,8 +79,9 @@ router.get('/stats', async (req, res) => {
   });
 });
 
-// 管理员接口：获取所有用户统计
-router.get('/admin/all-stats', adminAuth, async (req, res) => {
+// 管理员路由（单独挂载，不经过 auth）
+const adminRouter = express.Router();
+adminRouter.get('/all-stats', adminAuth, async (req, res) => {
   const records = await db.filter('exam_records', () => true);
   const users = await db.filter('users', () => true);
 
@@ -105,9 +106,7 @@ router.get('/admin/all-stats', adminAuth, async (req, res) => {
 
   res.json(result);
 });
-
-// 管理员接口：获取所有考试记录
-router.get('/admin/all-records', adminAuth, async (req, res) => {
+adminRouter.get('/all-records', adminAuth, async (req, res) => {
   const records = await db.filter('exam_records', () => true);
   const users = await db.filter('users', () => true);
   const userMap = {};
@@ -126,4 +125,4 @@ router.get('/admin/all-records', adminAuth, async (req, res) => {
   res.json(result);
 });
 
-module.exports = router;
+module.exports = { router, adminRouter };
