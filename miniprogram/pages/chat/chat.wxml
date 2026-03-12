@@ -26,8 +26,8 @@
       </view>
     </scroll-view>
     <view class="input-area">
-      <input class="msg-input" placeholder="输入你的话术..." value="{{inputText}}"
-        bindinput="onInput" confirm-type="send" bindconfirm="send" />
+      <textarea class="msg-input" placeholder="输入你的话术..." value="{{inputText}}"
+        bindinput="onInput" maxlength="-1" auto-height />
       <view class="btn-send" bindtap="send">发送</view>
       <view class="btn-end" bindtap="endChat">结束</view>
     </view>

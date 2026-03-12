@@ -7,6 +7,12 @@
     "pages/history/history",
     "pages/result/result"
   ],
+  "plugins": {
+    "WechatSI": {
+      "version": "0.3.5",
+      "provider": "wx069ba97219f66d99"
+    }
+  },
   "window": {
     "navigationBarBackgroundColor": "#4A90D9",
     "navigationBarTitleText": "CGM转化训练",

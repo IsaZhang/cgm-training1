@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { scoreConversation } = require('../services/scoring');
+const { adminAuth } = require('./auth');
 
 router.post('/submit', async (req, res) => {
   const { patient_type, conversation, exam_type } = req.body;
@@ -76,6 +77,53 @@ router.get('/stats', async (req, res) => {
     total_exams: total, passed,
     first_pass_attempt: firstPassIdx >= 0 ? firstPassIdx + 1 : null
   });
+});
+
+// 管理员接口：获取所有用户统计
+router.get('/admin/all-stats', adminAuth, async (req, res) => {
+  const records = await db.filter('exam_records', () => true);
+  const users = await db.filter('users', () => true);
+
+  const userStats = {};
+  users.forEach(u => {
+    userStats[u.id] = { id: u.id, name: u.name, phone: u.phone, total: 0, passed: 0, scores: [] };
+  });
+
+  records.forEach(r => {
+    if (userStats[r.user_id]) {
+      userStats[r.user_id].total++;
+      if (r.passed) userStats[r.user_id].passed++;
+      userStats[r.user_id].scores.push(r.score);
+    }
+  });
+
+  const result = Object.values(userStats).map(u => ({
+    ...u,
+    avg_score: u.scores.length > 0 ? Math.round(u.scores.reduce((a, b) => a + b, 0) / u.scores.length) : 0,
+    pass_rate: u.total > 0 ? Math.round((u.passed / u.total) * 100) : 0
+  })).filter(u => u.total > 0);
+
+  res.json(result);
+});
+
+// 管理员接口：获取所有考试记录
+router.get('/admin/all-records', adminAuth, async (req, res) => {
+  const records = await db.filter('exam_records', () => true);
+  const users = await db.filter('users', () => true);
+  const userMap = {};
+  users.forEach(u => userMap[u.id] = u.name);
+
+  const result = records.map(r => ({
+    id: r.id,
+    user_name: userMap[r.user_id] || '未知',
+    patient_type: r.patient_type,
+    exam_type: r.exam_type,
+    score: r.score,
+    passed: r.passed,
+    created_at: r.created_at
+  })).sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+  res.json(result);
 });
 
 module.exports = router;

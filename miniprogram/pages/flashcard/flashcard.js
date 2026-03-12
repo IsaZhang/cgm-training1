@@ -11,12 +11,28 @@ Page({
     const cards = await request('/flashcard/list');
     const cats = Object.keys(cards);
     const progressRes = await request('/flashcard/progress');
+
+    // 随机打乱每个分类的题目顺序
+    Object.keys(cards).forEach(cat => {
+      cards[cat] = this.shuffleArray(cards[cat]);
+    });
+
     this.setData({
       allCards: cards, categories: cats,
       currentCategory: cats[0], currentCards: cards[cats[0]] || [],
       progress: progressRes.progress || {}
     });
     this.updateMastered();
+  },
+
+  // 随机打乱数组
+  shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
   },
 
   switchCategory(e) {

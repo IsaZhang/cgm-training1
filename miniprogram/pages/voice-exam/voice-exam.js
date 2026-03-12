@@ -1,4 +1,5 @@
 const { request } = require('../../utils/api');
+const plugin = requirePlugin("WechatSI");
 
 Page({
   data: {
@@ -9,15 +10,15 @@ Page({
     sessionId: null
   },
 
-  recorderManager: null,
+  recognitionManager: null,
   innerAudioContext: null,
   isRecording: false,
-  autoStopTimer: null,
+  recognizedText: '',
 
   onLoad() {
-    this.recorderManager = wx.getRecorderManager();
+    this.recognitionManager = plugin.getRecordRecognitionManager();
     this.innerAudioContext = wx.createInnerAudioContext();
-    this.setupRecorder();
+    this.setupRecognition();
     this.loadRandomPatient();
   },
 
@@ -32,45 +33,42 @@ Page({
     this.setData({ patient });
   },
 
-  setupRecorder() {
-    this.recorderManager.onStart(() => {
+  setupRecognition() {
+    this.recognitionManager.onStart = () => {
       this.isRecording = true;
-      this.audioBuffer = [];
+      this.recognizedText = '';
       this.setData({ status: 'listening' });
+    };
 
-      // 简化方案：3秒后自动停止录音
-      this.autoStopTimer = setTimeout(() => {
-        if (this.isRecording) {
-          this.recorderManager.stop();
-        }
-      }, 5000);
-    });
+    this.recognitionManager.onRecognize = (res) => {
+      // 实时识别结果
+      this.recognizedText = res.result;
+    };
 
-    this.recorderManager.onStop((res) => {
+    this.recognitionManager.onStop = (res) => {
       this.isRecording = false;
-      if (this.autoStopTimer) {
-        clearTimeout(this.autoStopTimer);
-        this.autoStopTimer = null;
+      const finalText = res.result || this.recognizedText;
+      if (finalText) {
+        this.processRecognizedText(finalText);
       }
-      if (res.tempFilePath) {
-        this.processAudio(res.tempFilePath);
-      }
-    });
+    };
 
-    this.recorderManager.onError((err) => {
-      console.error('录音错误:', err);
-      wx.showToast({ title: '录音失败', icon: 'none' });
+    this.recognitionManager.onError = (err) => {
+      console.error('识别错误:', err);
+      wx.showToast({ title: '识别失败', icon: 'none' });
       this.setData({ status: 'idle' });
       this.startListening();
-    });
+    };
   },
 
-  async processAudio(filePath) {
+  async processRecognizedText(userText) {
     this.setData({ status: 'processing' });
 
     try {
-      // 模拟语音识别（照护师说的话）
-      const userText = '您好，我看到您的检查报告，糖化血红蛋白有点高，您平时有监测血糖吗？';
+      if (!userText || userText.trim() === '') {
+        throw new Error('未识别到语音内容');
+      }
+
       const messages = [...this.data.messages, { role: 'nurse', content: userText }];
       this.setData({ messages });
 
@@ -89,8 +87,12 @@ Page({
       messages.push({ role: 'patient', content: aiRes.reply });
       this.setData({ messages, sessionId: aiRes.sessionId });
 
-      // 模拟播放AI语音（实际需要播放真实音频）
-      await this.sleep(2000);
+      // 播放AI语音回复
+      if (aiRes.audioUrl) {
+        await this.playAudio(aiRes.audioUrl);
+      } else {
+        await this.sleep(2000);
+      }
 
       // 继续监听
       this.setData({ status: 'idle' });
@@ -118,24 +120,16 @@ Page({
 
   startListening() {
     if (!this.isRecording) {
-      this.recorderManager.start({
-        duration: 60000,
-        sampleRate: 16000,
-        numberOfChannels: 1,
-        encodeBitRate: 48000,
-        format: 'mp3',
-        frameSize: 10
+      this.recognitionManager.start({
+        lang: 'zh_CN',
+        duration: 60000
       });
     }
   },
 
   stopListening() {
     if (this.isRecording) {
-      this.recorderManager.stop();
-    }
-    if (this.autoStopTimer) {
-      clearTimeout(this.autoStopTimer);
-      this.autoStopTimer = null;
+      this.recognitionManager.stop();
     }
   },
 

@@ -26,6 +26,9 @@ ${patientType}
 ## 对话记录
 ${conversation.map(m => `${m.role === 'nurse' ? '照护师' : '患者'}: ${m.content}`).join('\n')}
 
+## 核心评分原则
+**重要：如果患者在对话中明确表示同意购买/佩戴CGM，或被照护师说服认同了CGM方案，则该照护师已完成销售转化，基础分为80分（及格），最终得分在80-100分之间，取决于以下质量因素。**
+
 ## 评分维度（总分100分）
 
 ### 1. 核心需求挖掘（30分）
@@ -75,6 +78,7 @@ ${conversation.map(m => `${m.role === 'nurse' ? '照护师' : '患者'}: ${m.con
 ## 输出要求
 请严格按以下JSON格式返回评分结果，不要输出其他内容：
 {
+  "convinced": true/false,
   "scores": {
     "need_discovery": { "score": 0, "max": 30, "comment": "具体扣分原因" },
     "wearing_plan": { "score": 0, "max": 25, "comment": "具体扣分原因" },
@@ -83,13 +87,21 @@ ${conversation.map(m => `${m.role === 'nurse' ? '照护师' : '患者'}: ${m.con
   },
   "total": 0,
   "summary": "总体评价"
-}`;
+}
+
+**convinced字段说明：如果患者明确同意购买/佩戴CGM或被说服认同方案，则为true；否则为false。**`;
 
   const result = await llm.chat([{ role: 'user', content: prompt }]);
 
   try {
     const cleaned = result.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleaned);
+
+    // 如果患者被说服，确保至少80分
+    if (parsed.convinced && parsed.total < PASS_SCORE) {
+      parsed.total = PASS_SCORE;
+    }
+
     parsed.passed = parsed.total >= PASS_SCORE;
     parsed.dimensions = SCORING_DIMENSIONS;
     return parsed;
