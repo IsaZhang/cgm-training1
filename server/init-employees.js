@@ -1,11 +1,5 @@
 require('dotenv').config();
-const cloudbase = require('@cloudbase/node-sdk');
-
-const app = cloudbase.init({
-  env: process.env.TCB_ENV
-});
-
-const db = app.database();
+const db = require('./db');
 
 // 初始员工数据
 const employees = [
@@ -17,18 +11,15 @@ const employees = [
 
 async function initEmployees() {
   console.log('开始导入员工数据...');
-  console.log('环境ID:', process.env.TCB_ENV);
-
-  const collection = db.collection('employees');
+  console.log('使用本地存储: store/employees.json');
 
   for (const emp of employees) {
     try {
-      // 检查是否已存在
-      const { data } = await collection.where({ phone: emp.phone }).get();
-      if (data.length > 0) {
+      const exists = await db.find('employees', e => e.phone === emp.phone);
+      if (exists) {
         console.log(`员工 ${emp.name} (${emp.phone}) 已存在，跳过`);
       } else {
-        await collection.add(emp);
+        await db.insert('employees', emp);
         console.log(`✓ 导入员工: ${emp.name} (${emp.phone})`);
       }
     } catch (e) {

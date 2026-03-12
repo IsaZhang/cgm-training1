@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "init-employees": "node init-employees.js"
   },
   "dependencies": {
     "@cloudbase/node-sdk": "^3.18.0",

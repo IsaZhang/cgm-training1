@@ -32,7 +32,14 @@
     <view class="card">
       <input class="input" placeholder="请输入姓名" bindinput="onNameInput" value="{{name}}" />
       <input class="input" placeholder="请输入手机号" type="number" bindinput="onPhoneInput" value="{{phone}}" />
-      <view class="btn-primary" bindtap="login">登录</view>
+      <view class="agreement-row">
+        <checkbox checked="{{agreed}}" color="#4A90D9" bindtap="toggleAgreed" />
+        <text class="agreement-text" bindtap="toggleAgreed">请阅读并同意</text>
+        <text class="agreement-link" catchtap="showAgreement">《用户协议》</text>
+        <text class="agreement-text" bindtap="toggleAgreed">和</text>
+        <text class="agreement-link" catchtap="showPrivacy">《隐私声明》</text>
+      </view>
+      <view class="btn-primary {{agreed ? '' : 'btn-disabled'}}" bindtap="login">登录</view>
       <view class="cancel-login" bindtap="cancelLogin">暂不登录</view>
     </view>
   </block>
