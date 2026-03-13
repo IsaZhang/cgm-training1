@@ -24,10 +24,10 @@
     </view>
   </view>
 
-  <!-- 对话状态 -->
-  <view class="status-bar">
+  <!-- 对话状态（聆听时可点击提前结束） -->
+  <view class="status-bar" bindtap="onStatusTap">
     <view class="status {{status}}">
-      <text wx:if="{{status === 'listening'}}">🎤 正在聆听...</text>
+      <text wx:if="{{status === 'listening'}}">🎤 正在聆听...（点击结束）</text>
       <text wx:elif="{{status === 'processing'}}">⏳ 处理中...</text>
       <text wx:elif="{{status === 'speaking'}}">🔊 AI回复中...</text>
       <text wx:else="{{status === 'idle'}}">💬 等待对话</text>

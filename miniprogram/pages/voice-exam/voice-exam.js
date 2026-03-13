@@ -1,28 +1,34 @@
 const { request } = require('../../utils/api');
-const plugin = requirePlugin("WechatSI");
+const plugin = requirePlugin('WechatSI');
 
 Page({
   data: {
     patient: null,
     started: false,
-    status: 'idle', // idle, listening, processing, speaking
+    status: 'idle',
     messages: [],
     sessionId: null
   },
 
-  recognitionManager: null,
+  recordManager: null,
   innerAudioContext: null,
   isRecording: false,
-  recognizedText: '',
+  isEnding: false,
 
   onLoad() {
-    this.recognitionManager = plugin.getRecordRecognitionManager();
+    this.recordManager = plugin.getRecordRecognitionManager();
     this.innerAudioContext = wx.createInnerAudioContext();
-    this.setupRecognition();
+    this.setupRecorder();
     this.loadRandomPatient();
   },
 
+  onHide() {
+    this.isEnding = true;
+    this.stopListening();
+  },
+
   onUnload() {
+    this.isEnding = true;
     this.stopListening();
     if (this.innerAudioContext) this.innerAudioContext.destroy();
   },
@@ -33,46 +39,41 @@ Page({
     this.setData({ patient });
   },
 
-  setupRecognition() {
-    this.recognitionManager.onStart = () => {
-      this.isRecording = true;
-      this.recognizedText = '';
-      this.setData({ status: 'listening' });
+  setupRecorder() {
+    const that = this;
+    this.recordManager.onStart = function () {
+      that.isRecording = true;
+      that.setData({ status: 'listening' });
     };
 
-    this.recognitionManager.onRecognize = (res) => {
-      // 实时识别结果
-      this.recognizedText = res.result;
-    };
-
-    this.recognitionManager.onStop = (res) => {
-      this.isRecording = false;
-      const finalText = res.result || this.recognizedText;
-      if (finalText) {
-        this.processRecognizedText(finalText);
+    this.recordManager.onStop = function (res) {
+      that.isRecording = false;
+      if (that.isEnding) return;
+      const userText = (res.result || '').trim();
+      if (userText) {
+        that.setData({ status: 'processing' });
+        that.processAudio(userText);
+      } else {
+        wx.showToast({ title: '未识别到语音，请重试', icon: 'none' });
+        that.setData({ status: 'idle' });
+        that.startListening();
       }
     };
 
-    this.recognitionManager.onError = (err) => {
-      console.error('识别错误:', err);
-      wx.showToast({ title: '识别失败', icon: 'none' });
-      this.setData({ status: 'idle' });
-      this.startListening();
+    this.recordManager.onError = function (res) {
+      that.isRecording = false;
+      if (that.isEnding) return;
+      wx.showToast({ title: (res && res.msg) || '录音失败', icon: 'none' });
+      that.setData({ status: 'idle' });
+      that.startListening();
     };
   },
 
-  async processRecognizedText(userText) {
-    this.setData({ status: 'processing' });
-
+  async processAudio(userText) {
     try {
-      if (!userText || userText.trim() === '') {
-        throw new Error('未识别到语音内容');
-      }
-
       const messages = [...this.data.messages, { role: 'nurse', content: userText }];
       this.setData({ messages });
 
-      // 获取AI回复
       this.setData({ status: 'speaking' });
       const aiRes = await request('/voice/chat', {
         method: 'POST',
@@ -87,14 +88,8 @@ Page({
       messages.push({ role: 'patient', content: aiRes.reply });
       this.setData({ messages, sessionId: aiRes.sessionId });
 
-      // 播放AI语音回复
-      if (aiRes.audioUrl) {
-        await this.playAudio(aiRes.audioUrl);
-      } else {
-        await this.sleep(2000);
-      }
+      await this.playAIVoice(aiRes.reply);
 
-      // 继续监听
       this.setData({ status: 'idle' });
       this.startListening();
     } catch (e) {
@@ -105,31 +100,67 @@ Page({
     }
   },
 
+  playAIVoice(text) {
+    if (!text) return this.sleep(1000);
+    const content = text.length > 50 ? text.substring(0, 50) : text;
+    return new Promise((resolve) => {
+      plugin.textToSpeech({
+        lang: 'zh_CN',
+        content,
+        success: (res) => {
+          if (res.retcode === 0 && res.filename) {
+            this.innerAudioContext.src = res.filename;
+            this.innerAudioContext.onEnded(() => resolve());
+            this.innerAudioContext.onError(() => resolve());
+            this.innerAudioContext.play();
+          } else {
+            resolve();
+          }
+        },
+        fail: () => resolve()
+      });
+    });
+  },
+
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   },
 
-  playAudio(url) {
-    return new Promise((resolve) => {
-      this.innerAudioContext.src = url;
-      this.innerAudioContext.onEnded(() => resolve());
-      this.innerAudioContext.onError(() => resolve());
-      this.innerAudioContext.play();
-    });
-  },
-
   startListening() {
-    if (!this.isRecording) {
-      this.recognitionManager.start({
-        lang: 'zh_CN',
-        duration: 60000
+    if (!this.recordManager) return;
+    if (!this.data.started) return;
+    if (!this.data.patient) return;
+    if (this.isRecording) return;
+    try {
+      this.setData({ status: 'listening' });
+      this.isRecording = true;
+      this.recordManager.start({
+        duration: 15000,
+        lang: 'zh_CN'
       });
+    } catch (e) {
+      console.error('启动录音失败:', e);
+      this.isRecording = false;
+      wx.showToast({ title: '启动录音失败', icon: 'none' });
+      this.setData({ status: 'idle' });
     }
   },
 
   stopListening() {
-    if (this.isRecording) {
-      this.recognitionManager.stop();
+    if (this.isRecording && this.recordManager) {
+      try {
+        this.recordManager.stop();
+      } catch (e) {
+        console.warn('停止录音:', e);
+      }
+      this.isRecording = false;
+    }
+    this.setData({ status: 'idle' });
+  },
+
+  onStatusTap() {
+    if (this.data.status === 'listening') {
+      this.stopListening();
     }
   },
 
@@ -144,11 +175,11 @@ Page({
       status: 'idle'
     });
 
-    // 模拟模式：跳过音频播放，直接开始监听
     this.startListening();
   },
 
   async endExam() {
+    this.isEnding = true;
     this.stopListening();
 
     wx.showModal({
@@ -156,6 +187,7 @@ Page({
       content: '确认结束对话并提交评分？',
       success: async (res) => {
         if (!res.confirm) {
+          this.isEnding = false;
           this.startListening();
           return;
         }
