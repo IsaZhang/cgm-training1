@@ -4,7 +4,10 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "init-employees": "node init-employees.js"
+    "init-employees": "node init-employees.js",
+    "import-excel": "node import-from-excel.js",
+    "import-excel:write": "node import-from-excel.js --write",
+    "import-excel:api": "node import-from-excel.js --api"
   },
   "dependencies": {
     "@cloudbase/node-sdk": "^3.18.0",
@@ -13,7 +16,8 @@
     "dotenv": "^17.3.1",
     "express": "^4.18.2",
     "form-data": "^4.0.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.0.0"
