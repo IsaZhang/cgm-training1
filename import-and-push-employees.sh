@@ -5,7 +5,7 @@ set -e
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVER_DIR="$PROJECT_ROOT/server"
-EXCEL_FILE="${1:-$PROJECT_ROOT/git sta人员在职表 3.16.xlsx}"
+EXCEL_FILE="${1:-$PROJECT_ROOT/人员在职表 3.16.xlsx}"
 EMPLOYEES_JSON="$SERVER_DIR/store/employees.json"
 
 cd "$PROJECT_ROOT"
