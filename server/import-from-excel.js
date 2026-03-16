@@ -17,7 +17,7 @@ const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
 
-const DEFAULT_EXCEL = path.join(__dirname, '..', '共同照护事业部入职人员信息_人员在职表 3.16.xlsx');
+const DEFAULT_EXCEL = path.join(__dirname, '..', '人员在职表.xlsx');
 const EMPLOYEES_JSON = path.join(__dirname, 'store', 'employees.json');
 
 // 列名映射（支持多种表头写法）
