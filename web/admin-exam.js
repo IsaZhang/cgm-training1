@@ -1,5 +1,6 @@
 const API_BASE = 'https://ai-cgm.phrones.com/api';
 let adminToken = '';
+let allRecords = [];
 
 async function request(url, options = {}) {
   const res = await fetch(API_BASE + url, {
@@ -55,11 +56,17 @@ async function loadStats() {
 }
 
 async function loadRecords() {
-  const data = await request('/exam/admin/all-records');
+  allRecords = await request('/exam/admin/all-records');
+  renderRecords(allRecords);
+}
+
+function renderRecords(records) {
   const tbody = document.querySelector('#recordsTable tbody');
-  tbody.innerHTML = data.map(r => `
+  tbody.innerHTML = records.map(r => `
     <tr>
       <td>${r.user_name}</td>
+      <td>${r.city}</td>
+      <td>${r.department}</td>
       <td>${r.patient_type}</td>
       <td>${r.exam_type === 'voice' ? '语音' : '文字'}</td>
       <td>${r.score}</td>
@@ -99,3 +106,58 @@ window.onload = () => {
     loadData();
   }
 };
+
+function applyFilters() {
+  const name = document.getElementById('filterName').value.trim().toLowerCase();
+  const patient = document.getElementById('filterPatient').value;
+  const examType = document.getElementById('filterExamType').value;
+  const minScore = document.getElementById('filterMinScore').value;
+  const maxScore = document.getElementById('filterMaxScore').value;
+  const startDate = document.getElementById('filterStartDate').value;
+  const endDate = document.getElementById('filterEndDate').value;
+
+  const filtered = allRecords.filter(r => {
+    if (name && !r.user_name.toLowerCase().includes(name)) return false;
+    if (patient && r.patient_type !== patient) return false;
+    if (examType && r.exam_type !== examType) return false;
+    if (minScore && r.score < Number(minScore)) return false;
+    if (maxScore && r.score > Number(maxScore)) return false;
+    if (startDate && new Date(r.created_at) < new Date(startDate)) return false;
+    if (endDate && new Date(r.created_at) > new Date(endDate + 'T23:59:59')) return false;
+    return true;
+  });
+
+  renderRecords(filtered);
+}
+
+function resetFilters() {
+  document.getElementById('filterName').value = '';
+  document.getElementById('filterPatient').value = '';
+  document.getElementById('filterExamType').value = '';
+  document.getElementById('filterMinScore').value = '';
+  document.getElementById('filterMaxScore').value = '';
+  document.getElementById('filterStartDate').value = '';
+  document.getElementById('filterEndDate').value = '';
+  renderRecords(allRecords);
+}
+
+function downloadCSV() {
+  const headers = ['姓名', '城市', '部门', '患者类型', '考试类型', '分数', '是否通过', '考试时间'];
+  const rows = allRecords.map(r => [
+    r.user_name,
+    r.city,
+    r.department,
+    r.patient_type,
+    r.exam_type === 'voice' ? '语音' : '文字',
+    r.score,
+    r.passed ? '通过' : '未通过',
+    new Date(r.created_at).toLocaleString('zh-CN')
+  ]);
+
+  const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `考试记录_${new Date().toLocaleDateString('zh-CN')}.csv`;
+  link.click();
+}

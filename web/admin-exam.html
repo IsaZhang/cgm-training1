@@ -67,10 +67,33 @@
 
       <div id="recordsTab" class="card hidden">
         <h3 style="margin-bottom: 15px;">所有考试记录</h3>
+        <div class="filters" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="filterName" placeholder="姓名" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <select id="filterPatient" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="">全部患者类型</option>
+            <option value="1型">1型</option>
+            <option value="2型">2型</option>
+            <option value="妊娠">妊娠</option>
+          </select>
+          <select id="filterExamType" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="">全部考试类型</option>
+            <option value="voice">语音</option>
+            <option value="text">文字</option>
+          </select>
+          <input type="number" id="filterMinScore" placeholder="最低分" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
+          <input type="number" id="filterMaxScore" placeholder="最高分" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
+          <input type="date" id="filterStartDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <input type="date" id="filterEndDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <button onclick="applyFilters()" style="padding: 8px 16px; background: #007aff; color: white; border: none; border-radius: 4px; cursor: pointer;">筛选</button>
+          <button onclick="resetFilters()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">重置</button>
+          <button onclick="downloadCSV()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">下载CSV</button>
+        </div>
         <table id="recordsTable">
           <thead>
             <tr>
               <th>姓名</th>
+              <th>城市</th>
+              <th>部门</th>
               <th>患者类型</th>
               <th>考试类型</th>
               <th>分数</th>

@@ -109,18 +109,31 @@ adminRouter.get('/all-stats', adminAuth, async (req, res) => {
 adminRouter.get('/all-records', adminAuth, async (req, res) => {
   const records = await db.filter('exam_records', () => true);
   const users = await db.filter('users', () => true);
+  const employees = await db.filter('employees', () => true);
+
   const userMap = {};
   users.forEach(u => userMap[u.id] = u.name);
 
-  const result = records.map(r => ({
-    id: r.id,
-    user_name: userMap[r.user_id] || '未知',
-    patient_type: r.patient_type,
-    exam_type: r.exam_type,
-    score: r.score,
-    passed: r.passed,
-    created_at: r.created_at
-  })).sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const empMap = {};
+  employees.forEach(e => empMap[e.phone] = { city: e.city, department: e.department });
+
+  const result = records.map(r => {
+    const userName = userMap[r.user_id] || '未知';
+    const user = users.find(u => u.id === r.user_id);
+    const empInfo = user ? empMap[user.phone] : null;
+
+    return {
+      id: r.id,
+      user_name: userName,
+      city: empInfo?.city || '-',
+      department: empInfo?.department || '-',
+      patient_type: r.patient_type,
+      exam_type: r.exam_type,
+      score: r.score,
+      passed: r.passed,
+      created_at: r.created_at
+    };
+  }).sort((a, b) => b.created_at.localeCompare(a.created_at));
 
   res.json(result);
 });
