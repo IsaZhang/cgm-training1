@@ -1,6 +1,9 @@
 const API_BASE = 'https://ai-cgm.phrones.com/api';
 let adminToken = '';
+let allStats = [];
+let filteredStats = [];
 let allRecords = [];
+let filteredRecords = [];
 
 async function request(url, options = {}) {
   const res = await fetch(API_BASE + url, {
@@ -41,12 +44,24 @@ async function loadData() {
 }
 
 async function loadStats() {
-  const data = await request('/exam/admin/all-stats');
+  allStats = await request('/exam/admin/all-stats');
+  populateStatsFilters(allStats);
+  filteredStats = [...allStats];
+  renderStats(filteredStats);
+}
+
+function renderStats(stats) {
   const tbody = document.querySelector('#statsTable tbody');
-  tbody.innerHTML = data.map(u => `
+  if (!stats || stats.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999;">暂无数据</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = stats.map(u => `
     <tr>
       <td>${u.name}</td>
-      <td>${u.phone}</td>
+      <td>${u.city}</td>
+      <td>${u.department}</td>
       <td>${u.total}</td>
       <td>${u.passed}</td>
       <td>${u.pass_rate}%</td>
@@ -55,9 +70,16 @@ async function loadStats() {
   `).join('');
 }
 
+function populateStatsFilters(stats) {
+  populateSelect('statsFilterCity', '全部城市', uniqueValues(stats.map(u => u.city)));
+  populateSelect('statsFilterDepartment', '全部部门', uniqueValues(stats.map(u => u.department)));
+  populateSelect('statsFilterVoicePassedCases', '全部语音通过案例数', uniqueValues(stats.map(u => String(u.voice_passed_cases))));
+}
+
 async function loadRecords() {
   allRecords = await request('/exam/admin/all-records');
-  renderRecords(allRecords);
+  filteredRecords = [...allRecords];
+  renderRecords(filteredRecords);
 }
 
 function renderRecords(records) {
@@ -125,7 +147,7 @@ function applyFilters() {
   const startDate = document.getElementById('filterStartDate').value;
   const endDate = document.getElementById('filterEndDate').value;
 
-  const filtered = allRecords.filter(r => {
+  filteredRecords = allRecords.filter(r => {
     if (name && !r.user_name.toLowerCase().includes(name)) return false;
     if (patient && r.patient_type !== patient) return false;
     if (examType && r.exam_type !== examType) return false;
@@ -136,7 +158,7 @@ function applyFilters() {
     return true;
   });
 
-  renderRecords(filtered);
+  renderRecords(filteredRecords);
 }
 
 function resetFilters() {
@@ -147,12 +169,13 @@ function resetFilters() {
   document.getElementById('filterMaxScore').value = '';
   document.getElementById('filterStartDate').value = '';
   document.getElementById('filterEndDate').value = '';
-  renderRecords(allRecords);
+  filteredRecords = [...allRecords];
+  renderRecords(filteredRecords);
 }
 
 function downloadCSV() {
   const headers = ['姓名', '城市', '部门', '患者类型', '考试类型', '分数', '是否通过', '考试时间'];
-  const rows = allRecords.map(r => [
+  const rows = filteredRecords.map(r => [
     r.user_name,
     r.city,
     r.department,
@@ -163,10 +186,71 @@ function downloadCSV() {
     new Date(r.created_at).toLocaleString('zh-CN')
   ]);
 
-  const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+  downloadCsvFile(headers, rows, `考试记录_${new Date().toLocaleDateString('zh-CN')}.csv`);
+}
+
+function applyStatsFilters() {
+  const city = document.getElementById('statsFilterCity').value;
+  const department = document.getElementById('statsFilterDepartment').value;
+  const voicePassedCases = document.getElementById('statsFilterVoicePassedCases').value;
+
+  filteredStats = allStats.filter(u => {
+    if (city && u.city !== city) return false;
+    if (department && u.department !== department) return false;
+    if (voicePassedCases && String(u.voice_passed_cases) !== voicePassedCases) return false;
+    return true;
+  });
+
+  renderStats(filteredStats);
+}
+
+function resetStatsFilters() {
+  document.getElementById('statsFilterCity').value = '';
+  document.getElementById('statsFilterDepartment').value = '';
+  document.getElementById('statsFilterVoicePassedCases').value = '';
+  filteredStats = [...allStats];
+  renderStats(filteredStats);
+}
+
+function downloadStatsCSV() {
+  const headers = ['姓名', '城市', '部门', '考试次数', '通过次数', '通过率', '语音通过案例数', '最近一次语音考试时间'];
+  const rows = filteredStats.map(u => [
+    u.name,
+    u.city,
+    u.department,
+    u.total,
+    u.passed,
+    `${u.pass_rate}%`,
+    `${u.voice_passed_cases}/5`,
+    formatDateTime(u.latest_voice_exam_at)
+  ]);
+
+  downloadCsvFile(headers, rows, `用户统计_${new Date().toLocaleDateString('zh-CN')}.csv`);
+}
+
+function uniqueValues(values) {
+  return [...new Set(values.filter(value => value && value !== '-'))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+}
+
+function populateSelect(selectId, placeholder, values) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = `<option value="">${placeholder}</option>` + values.map(value => (
+    `<option value="${value}">${value}</option>`
+  )).join('');
+}
+
+function formatDateTime(value) {
+  return value ? new Date(value).toLocaleString('zh-CN') : '-';
+}
+
+function downloadCsvFile(headers, rows, filename) {
+  const csv = [headers, ...rows]
+    .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `考试记录_${new Date().toLocaleDateString('zh-CN')}.csv`;
+  link.download = filename;
   link.click();
 }

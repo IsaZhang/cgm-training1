@@ -27,6 +27,12 @@
     .badge.fail { background: #f8d7da; color: #721c24; }
     .hidden { display: none; }
     .logout-btn { float: right; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .filters { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .filters input, .filters select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    .filters button { padding: 8px 16px; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .btn-primary { background: #007aff; }
+    .btn-secondary { background: #6c757d; }
+    .btn-success { background: #28a745; }
   </style>
 </head>
 <body>
@@ -50,11 +56,26 @@
 
       <div id="statsTab" class="card">
         <h3 style="margin-bottom: 15px;">用户考试统计</h3>
+        <div class="filters">
+          <select id="statsFilterCity">
+            <option value="">全部城市</option>
+          </select>
+          <select id="statsFilterDepartment">
+            <option value="">全部部门</option>
+          </select>
+          <select id="statsFilterVoicePassedCases">
+            <option value="">全部语音通过案例数</option>
+          </select>
+          <button class="btn-primary" onclick="applyStatsFilters()">筛选</button>
+          <button class="btn-secondary" onclick="resetStatsFilters()">重置</button>
+          <button class="btn-success" onclick="downloadStatsCSV()">下载CSV</button>
+        </div>
         <table id="statsTable">
           <thead>
             <tr>
               <th>姓名</th>
-              <th>手机号</th>
+              <th>城市</th>
+              <th>部门</th>
               <th>考试次数</th>
               <th>通过次数</th>
               <th>通过率</th>
@@ -67,26 +88,26 @@
 
       <div id="recordsTab" class="card hidden">
         <h3 style="margin-bottom: 15px;">所有考试记录</h3>
-        <div class="filters" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-          <input type="text" id="filterName" placeholder="姓名" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          <select id="filterPatient" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <div class="filters">
+          <input type="text" id="filterName" placeholder="姓名">
+          <select id="filterPatient">
             <option value="">全部患者类型</option>
             <option value="1型">1型</option>
             <option value="2型">2型</option>
             <option value="妊娠">妊娠</option>
           </select>
-          <select id="filterExamType" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <select id="filterExamType">
             <option value="">全部考试类型</option>
             <option value="voice">语音</option>
             <option value="text">文字</option>
           </select>
-          <input type="number" id="filterMinScore" placeholder="最低分" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
-          <input type="number" id="filterMaxScore" placeholder="最高分" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
-          <input type="date" id="filterStartDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          <input type="date" id="filterEndDate" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          <button onclick="applyFilters()" style="padding: 8px 16px; background: #007aff; color: white; border: none; border-radius: 4px; cursor: pointer;">筛选</button>
-          <button onclick="resetFilters()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">重置</button>
-          <button onclick="downloadCSV()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">下载CSV</button>
+          <input type="number" id="filterMinScore" placeholder="最低分" style="width: 100px;">
+          <input type="number" id="filterMaxScore" placeholder="最高分" style="width: 100px;">
+          <input type="date" id="filterStartDate">
+          <input type="date" id="filterEndDate">
+          <button class="btn-primary" onclick="applyFilters()">筛选</button>
+          <button class="btn-secondary" onclick="resetFilters()">重置</button>
+          <button class="btn-success" onclick="downloadCSV()">下载CSV</button>
         </div>
         <table id="recordsTable">
           <thead>

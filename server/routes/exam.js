@@ -84,10 +84,27 @@ const adminRouter = express.Router();
 adminRouter.get('/all-stats', adminAuth, async (req, res) => {
   const records = await db.filter('exam_records', () => true);
   const users = await db.filter('users', () => true);
+  const employees = await db.filter('employees', () => true);
+
+  const empMap = {};
+  employees.forEach(e => {
+    empMap[e.phone] = { city: e.city, department: e.department };
+  });
 
   const userStats = {};
   users.forEach(u => {
-    userStats[u.id] = { id: u.id, name: u.name, phone: u.phone, total: 0, passed: 0, voicePassedCases: new Set() };
+    const empInfo = empMap[u.phone] || {};
+    userStats[u.id] = {
+      id: u.id,
+      name: u.name,
+      phone: u.phone,
+      city: empInfo.city || '-',
+      department: empInfo.department || '-',
+      total: 0,
+      passed: 0,
+      voicePassedCases: new Set(),
+      latestVoiceExamAt: null
+    };
   });
 
   records.forEach(r => {
@@ -97,18 +114,34 @@ adminRouter.get('/all-stats', adminAuth, async (req, res) => {
       if (r.exam_type === 'voice' && r.score >= 80) {
         userStats[r.user_id].voicePassedCases.add(r.patient_type);
       }
+      if (r.exam_type === 'voice') {
+        const currentLatest = userStats[r.user_id].latestVoiceExamAt;
+        if (!currentLatest || r.created_at > currentLatest) {
+          userStats[r.user_id].latestVoiceExamAt = r.created_at;
+        }
+      }
     }
   });
 
   const result = Object.values(userStats).map(u => ({
     id: u.id,
     name: u.name,
-    phone: u.phone,
+    city: u.city,
+    department: u.department,
     total: u.total,
     passed: u.passed,
     pass_rate: u.total > 0 ? Math.round((u.passed / u.total) * 100) : 0,
-    voice_passed_cases: u.voicePassedCases.size
-  })).filter(u => u.total > 0);
+    voice_passed_cases: u.voicePassedCases.size,
+    latest_voice_exam_at: u.latestVoiceExamAt
+  })).filter(u => u.total > 0)
+    .sort((a, b) => {
+      if (a.latest_voice_exam_at && b.latest_voice_exam_at) {
+        return b.latest_voice_exam_at.localeCompare(a.latest_voice_exam_at);
+      }
+      if (a.latest_voice_exam_at) return -1;
+      if (b.latest_voice_exam_at) return 1;
+      return b.total - a.total;
+    });
 
   res.json(result);
 });
