@@ -3,6 +3,7 @@ const plugin = requirePlugin('WechatSI');
 
 Page({
   data: {
+    patients: [],
     patient: null,
     started: false,
     status: 'idle',
@@ -19,7 +20,7 @@ Page({
     this.recordManager = plugin.getRecordRecognitionManager();
     this.innerAudioContext = wx.createInnerAudioContext();
     this.setupRecorder();
-    this.loadRandomPatient();
+    this.loadPatients();
   },
 
   onHide() {
@@ -33,9 +34,14 @@ Page({
     if (this.innerAudioContext) this.innerAudioContext.destroy();
   },
 
-  async loadRandomPatient() {
+  async loadPatients() {
     const patients = await request('/chat/patients');
-    const patient = patients[Math.floor(Math.random() * patients.length)];
+    this.setData({ patients });
+  },
+
+  selectPatient(e) {
+    const id = e.currentTarget.dataset.id;
+    const patient = this.data.patients.find(x => x.id === id);
     this.setData({ patient });
   },
 

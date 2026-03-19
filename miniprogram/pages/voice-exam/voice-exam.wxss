@@ -1,6 +1,14 @@
 .container { display: flex; flex-direction: column; height: 100vh; background: #f5f5f5; }
 
-.patient-card { background: white; margin: 20rpx; padding: 30rpx; border-radius: 16rpx; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1); }
+.mode-tag { display: inline-block; padding: 6rpx 16rpx; border-radius: 6rpx; font-size: 22rpx; margin: 20rpx; }
+.mode-exam { background: #fce4ec; color: #e53935; }
+
+.patient-select { margin: 0 20rpx 20rpx; }
+.patient-card { background: white; padding: 30rpx; border-radius: 16rpx; box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1); display: flex; align-items: center; margin-bottom: 20rpx; }
+.patient-name { font-size: 30rpx; font-weight: bold; display: block; margin-bottom: 8rpx; }
+.patient-info { font-size: 24rpx; color: #666; line-height: 1.6; }
+.patient-tag { font-size: 22rpx; color: #999; }
+
 .card-title { font-size: 32rpx; font-weight: bold; margin-bottom: 20rpx; color: #333; }
 .info-row { margin-bottom: 16rpx; font-size: 28rpx; line-height: 1.6; }
 .label { color: #666; font-weight: 500; }

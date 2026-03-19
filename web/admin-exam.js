@@ -50,7 +50,7 @@ async function loadStats() {
       <td>${u.total}</td>
       <td>${u.passed}</td>
       <td>${u.pass_rate}%</td>
-      <td>${u.avg_score}</td>
+      <td>${u.voice_passed_cases}/5</td>
     </tr>
   `).join('');
 }
@@ -62,6 +62,10 @@ async function loadRecords() {
 
 function renderRecords(records) {
   const tbody = document.querySelector('#recordsTable tbody');
+  if (!records || records.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">暂无数据</td></tr>';
+    return;
+  }
   tbody.innerHTML = records.map(r => `
     <tr>
       <td>${r.user_name}</td>
@@ -108,6 +112,11 @@ window.onload = () => {
 };
 
 function applyFilters() {
+  if (!allRecords || allRecords.length === 0) {
+    alert('请先加载数据');
+    return;
+  }
+
   const name = document.getElementById('filterName').value.trim().toLowerCase();
   const patient = document.getElementById('filterPatient').value;
   const examType = document.getElementById('filterExamType').value;

@@ -87,21 +87,27 @@ adminRouter.get('/all-stats', adminAuth, async (req, res) => {
 
   const userStats = {};
   users.forEach(u => {
-    userStats[u.id] = { id: u.id, name: u.name, phone: u.phone, total: 0, passed: 0, scores: [] };
+    userStats[u.id] = { id: u.id, name: u.name, phone: u.phone, total: 0, passed: 0, voicePassedCases: new Set() };
   });
 
   records.forEach(r => {
     if (userStats[r.user_id]) {
       userStats[r.user_id].total++;
       if (r.passed) userStats[r.user_id].passed++;
-      userStats[r.user_id].scores.push(r.score);
+      if (r.exam_type === 'voice' && r.score >= 80) {
+        userStats[r.user_id].voicePassedCases.add(r.patient_type);
+      }
     }
   });
 
   const result = Object.values(userStats).map(u => ({
-    ...u,
-    avg_score: u.scores.length > 0 ? Math.round(u.scores.reduce((a, b) => a + b, 0) / u.scores.length) : 0,
-    pass_rate: u.total > 0 ? Math.round((u.passed / u.total) * 100) : 0
+    id: u.id,
+    name: u.name,
+    phone: u.phone,
+    total: u.total,
+    passed: u.passed,
+    pass_rate: u.total > 0 ? Math.round((u.passed / u.total) * 100) : 0,
+    voice_passed_cases: u.voicePassedCases.size
   })).filter(u => u.total > 0);
 
   res.json(result);
