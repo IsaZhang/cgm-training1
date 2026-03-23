@@ -24,9 +24,12 @@
 .card-counter { text-align: center; color: #999; font-size: 24rpx; margin-top: 20rpx; }
 .card-list-toggle { text-align: center; color: #4A90D9; font-size: 26rpx; margin-top: 30rpx; padding: 20rpx; }
 .card-list { margin-top: 20rpx; }
-.card-list-item { display: flex; align-items: center; padding: 20rpx; background: #fff; border-radius: 8rpx; margin-bottom: 12rpx; }
-.card-list-item.mastered { border-left: 4rpx solid #5a5; }
-.card-list-item.weak { border-left: 4rpx solid #e55; }
-.card-list-item.new { border-left: 4rpx solid #59a; }
-.card-list-icon { font-size: 28rpx; margin-right: 16rpx; }
+.card-list-item { display: flex; align-items: center; padding: 20rpx; background: #fff; border-radius: 12rpx; margin-bottom: 12rpx; border-left: 10rpx solid transparent; }
+.card-list-item.mastered { background: #efe; border-left-color: #5a5; }
+.card-list-item.weak { background: #fee; border-left-color: #e55; }
+.card-list-item.new { background: #eef; border-left-color: #59a; }
+.card-list-item.mastered .card-list-icon, .card-list-item.mastered .card-list-text { color: #5a5; }
+.card-list-item.weak .card-list-icon, .card-list-item.weak .card-list-text { color: #e55; }
+.card-list-item.new .card-list-icon, .card-list-item.new .card-list-text { color: #59a; }
+.card-list-icon { font-size: 28rpx; margin-right: 16rpx; font-weight: 600; }
 .card-list-text { font-size: 26rpx; color: #333; flex: 1; }

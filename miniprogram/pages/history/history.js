@@ -8,7 +8,29 @@ Page({
       request('/exam/history'),
       request('/exam/stats')
     ]);
-    this.setData({ records, stats });
+    this.setData({
+      records: (records || []).map(record => ({
+        ...record,
+        examTypeLabel: this.getExamTypeLabel(record),
+        examTypeIcon: this.getExamTypeIcon(record)
+      })),
+      stats
+    });
+  },
+
+  getExamType(record) {
+    if (record.exam_type === 'voice') return 'voice';
+    if (record.exam_type === 'text') return 'text';
+    if (record.session_id && String(record.session_id).startsWith('voice_')) return 'voice';
+    return 'text';
+  },
+
+  getExamTypeLabel(record) {
+    return this.getExamType(record) === 'voice' ? '语音考核' : '留言考核';
+  },
+
+  getExamTypeIcon(record) {
+    return this.getExamType(record) === 'voice' ? '🎤' : '💬';
   },
 
   async viewDetail(e) {

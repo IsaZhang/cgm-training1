@@ -4,7 +4,7 @@ Page({
   data: {
     categories: [], currentCategory: '', currentCards: [],
     allCards: {}, cardIndex: 0, flipped: false,
-    progress: {}, masteredCount: 0, showList: false
+    progress: {}, masteredCount: 0, showList: false, sortedCardList: []
   },
 
   async onLoad() {
@@ -22,7 +22,7 @@ Page({
       currentCategory: cats[0], currentCards: cards[cats[0]] || [],
       progress: progressRes.progress || {}
     });
-    this.updateMastered();
+    this.updateCardViews();
   },
 
   // 随机打乱数组
@@ -41,7 +41,7 @@ Page({
       currentCategory: cat, currentCards: this.data.allCards[cat] || [],
       cardIndex: 0, flipped: false, showList: false
     });
-    this.updateMastered();
+    this.updateCardViews();
   },
 
   flip() { this.setData({ flipped: !this.data.flipped }); },
@@ -55,7 +55,7 @@ Page({
     const progress = this.data.progress;
     progress[card.id] = { mastered: mastered ? 1 : 0 };
     this.setData({ progress });
-    this.updateMastered();
+    this.updateCardViews();
     this.nextCard();
   },
 
@@ -74,10 +74,33 @@ Page({
     this.setData({ cardIndex: index, flipped: false, showList: false });
   },
 
-  updateMastered() {
+  getCardStatus(card) {
+    const record = this.data.progress[card.id];
+    if (!record) return 'new';
+    return record.mastered ? 'mastered' : 'weak';
+  },
+
+  getSortedCardList() {
     const cards = this.data.currentCards || [];
-    const p = this.data.progress;
-    const count = cards.filter(c => p[c.id] && p[c.id].mastered).length;
-    this.setData({ masteredCount: count });
+    return cards
+      .map((card, index) => ({
+        ...card,
+        originalIndex: index,
+        status: this.getCardStatus(card)
+      }))
+      .sort((a, b) => {
+        const priority = { weak: 0, new: 1, mastered: 2 };
+        const diff = priority[a.status] - priority[b.status];
+        return diff !== 0 ? diff : a.originalIndex - b.originalIndex;
+      });
+  },
+
+  updateCardViews() {
+    const cards = this.data.currentCards || [];
+    const count = cards.filter(c => this.getCardStatus(c) === 'mastered').length;
+    this.setData({
+      masteredCount: count,
+      sortedCardList: this.getSortedCardList()
+    });
   }
 });

@@ -41,10 +41,10 @@
   </view>
 
   <view class="card-list" wx:if="{{showList}}">
-    <view wx:for="{{currentCards}}" wx:key="id"
-      class="card-list-item {{progress[item.id] ? (progress[item.id].mastered ? 'mastered' : 'weak') : 'new'}}"
-      bindtap="jumpToCard" data-index="{{index}}">
-      <text class="card-list-icon">{{progress[item.id] ? (progress[item.id].mastered ? '✓' : '⚠') : '○'}}</text>
+    <view wx:for="{{sortedCardList}}" wx:key="id"
+      class="card-list-item {{item.status}}"
+      bindtap="jumpToCard" data-index="{{item.originalIndex}}">
+      <text class="card-list-icon">{{item.status === 'mastered' ? '✓' : (item.status === 'weak' ? '⚠' : '○')}}</text>
       <text class="card-list-text">{{item.front}}</text>
     </view>
   </view>

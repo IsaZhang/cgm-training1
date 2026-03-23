@@ -56,7 +56,10 @@ router.get('/history', async (req, res) => {
   rows.sort((a, b) => b.created_at.localeCompare(a.created_at));
   res.json(rows.map(r => ({
     id: r.id, patient_type: r.patient_type, score: r.score,
-    passed: r.passed, deductions: r.deductions, created_at: r.created_at
+    passed: r.passed,
+    deductions: r.deductions,
+    exam_type: r.exam_type || (r.session_id && String(r.session_id).startsWith('voice_') ? 'voice' : 'text'),
+    created_at: r.created_at
   })));
 });
 

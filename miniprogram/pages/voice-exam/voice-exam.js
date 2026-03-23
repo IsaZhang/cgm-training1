@@ -69,10 +69,118 @@ Page({
     this.recordManager.onError = function (res) {
       that.isRecording = false;
       if (that.isEnding) return;
-      wx.showToast({ title: (res && res.msg) || '录音失败', icon: 'none' });
+      console.error('录音错误:', res);
+      that.handleRecordError(res);
       that.setData({ status: 'idle' });
-      that.startListening();
     };
+  },
+
+  async ensureRecordPermission() {
+    try {
+      const setting = await new Promise((resolve, reject) => {
+        wx.getSetting({
+          success: resolve,
+          fail: reject
+        });
+      });
+
+      if (setting.authSetting['scope.record']) {
+        return true;
+      }
+
+      try {
+        await new Promise((resolve, reject) => {
+          wx.authorize({
+            scope: 'scope.record',
+            success: resolve,
+            fail: reject
+          });
+        });
+        return true;
+      } catch (e) {
+        return await this.promptRecordPermission();
+      }
+    } catch (e) {
+      console.error('检查录音权限失败:', e);
+      wx.showToast({ title: '暂时无法录音', icon: 'none' });
+      return false;
+    }
+  },
+
+  promptRecordPermission() {
+    return new Promise((resolve) => {
+      wx.showModal({
+        title: '需要开启麦克风',
+        content: '语音考核要先打开麦克风权限。点“去开启”后允许使用麦克风，再回来继续。',
+        confirmText: '去开启',
+        success: (res) => {
+          if (!res.confirm) {
+            resolve(false);
+            return;
+          }
+          wx.openSetting({
+            success: (settingRes) => {
+              resolve(!!settingRes.authSetting['scope.record']);
+            },
+            fail: () => resolve(false)
+          });
+        },
+        fail: () => resolve(false)
+      });
+    });
+  },
+
+  isPermissionError(message) {
+    const text = String(message || '').toLowerCase();
+    return text.includes('auth deny') ||
+      text.includes('permission') ||
+      text.includes('denied') ||
+      text.includes('authorize') ||
+      text.includes('scope.record');
+  },
+
+  handleRecordError(res) {
+    const message = res && res.msg;
+    const normalizedMessage = String(message || '').toLowerCase();
+
+    if (this.isPermissionError(message)) {
+      this.promptRecordPermission();
+      return;
+    }
+
+    if (normalizedMessage.includes('please wait recognition finished')) {
+      wx.showToast({ title: '正在识别刚才的语音，请稍等', icon: 'none' });
+      return;
+    }
+
+    if (normalizedMessage.includes('record manager record failed')) {
+      wx.showToast({ title: '没录上声音，请重试', icon: 'none' });
+      this.startListening();
+      return;
+    }
+
+    wx.showToast({ title: '录音没成功，请重试', icon: 'none' });
+    this.startListening();
+  },
+
+  getFriendlyErrorMessage(error) {
+    const text = String(
+      (error && (error.msg || error.errMsg || error.message)) || ''
+    ).toLowerCase();
+
+    if (!text) return '操作没成功，请重试';
+    if (this.isPermissionError(text)) return '需要打开麦克风才能继续';
+    if (text.includes('please wait recognition finished')) return '正在识别刚才的语音，请稍等';
+    if (text.includes('record manager record failed')) return '没录上声音，请重试';
+    if (text.includes('start record failed')) return '录音没开始成功，请重试';
+    if (text.includes('operate too frequent')) return '操作太快了，请稍等一下再试';
+    if (text.includes('audio is playing')) return '正在播放语音，请等播放完再说';
+    if (text.includes('interrupted')) return '录音被打断了，请再说一遍';
+    if (text.includes('network')) return '网络有点不稳定，请稍后再试';
+    if (text.includes('timeout')) return '等待时间有点久，请重试';
+    if (text.includes('recognition')) return '语音还在识别中，请稍等';
+
+    return '操作没成功，请重试';
   },
 
   async processAudio(userText) {
@@ -100,7 +208,7 @@ Page({
       this.startListening();
     } catch (e) {
       console.error('处理失败:', e);
-      wx.showToast({ title: '处理失败', icon: 'none' });
+      wx.showToast({ title: this.getFriendlyErrorMessage(e) || '处理失败', icon: 'none' });
       this.setData({ status: 'idle' });
       this.startListening();
     }
@@ -147,7 +255,7 @@ Page({
     } catch (e) {
       console.error('启动录音失败:', e);
       this.isRecording = false;
-      wx.showToast({ title: '启动录音失败', icon: 'none' });
+      wx.showToast({ title: this.getFriendlyErrorMessage(e) || '启动录音失败', icon: 'none' });
       this.setData({ status: 'idle' });
     }
   },
@@ -171,6 +279,9 @@ Page({
   },
 
   async startExam() {
+    const hasPermission = await this.ensureRecordPermission();
+    if (!hasPermission) return;
+
     const sessionId = `voice_${Date.now()}`;
     const greeting = `你好，我是来看糖尿病的。`;
 
