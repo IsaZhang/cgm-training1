@@ -33,7 +33,8 @@ async function chat(messages) {
     model: config.model,
     messages
   }, {
-    headers: { 'Content-Type': 'application/json', ...config.headerFn(API_KEY) }
+    headers: { 'Content-Type': 'application/json', ...config.headerFn(API_KEY) },
+    timeout: 25000
   });
 
   return res.data.choices[0].message.content;

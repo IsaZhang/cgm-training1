@@ -15,6 +15,7 @@ Page({
   innerAudioContext: null,
   isRecording: false,
   isEnding: false,
+  recoverTimer: null,
 
   onLoad() {
     this.recordManager = plugin.getRecordRecognitionManager();
@@ -31,6 +32,7 @@ Page({
   onUnload() {
     this.isEnding = true;
     this.stopListening();
+    this.clearRecoverTimer();
     if (this.innerAudioContext) this.innerAudioContext.destroy();
   },
 
@@ -150,6 +152,7 @@ Page({
 
     if (normalizedMessage.includes('please wait recognition finished')) {
       wx.showToast({ title: '正在识别刚才的语音，请稍等', icon: 'none' });
+      this.scheduleRecoverListening(1500);
       return;
     }
 
@@ -161,6 +164,24 @@ Page({
 
     wx.showToast({ title: '录音没成功，请重试', icon: 'none' });
     this.startListening();
+  },
+
+  clearRecoverTimer() {
+    if (this.recoverTimer) {
+      clearTimeout(this.recoverTimer);
+      this.recoverTimer = null;
+    }
+  },
+
+  scheduleRecoverListening(delay = 1000) {
+    this.clearRecoverTimer();
+    this.recoverTimer = setTimeout(() => {
+      this.recoverTimer = null;
+      if (this.isEnding) return;
+      if (!this.data.started || !this.data.patient) return;
+      if (this.data.status === 'speaking' || this.data.status === 'processing') return;
+      this.startListening();
+    }, delay);
   },
 
   getFriendlyErrorMessage(error) {
@@ -191,6 +212,7 @@ Page({
       this.setData({ status: 'speaking' });
       const aiRes = await request('/voice/chat', {
         method: 'POST',
+        timeout: 30000,
         data: {
           sessionId: this.data.sessionId,
           patientId: this.data.patient.id,
@@ -241,6 +263,7 @@ Page({
   },
 
   startListening() {
+    this.clearRecoverTimer();
     if (!this.recordManager) return;
     if (!this.data.started) return;
     if (!this.data.patient) return;
@@ -261,6 +284,7 @@ Page({
   },
 
   stopListening() {
+    this.clearRecoverTimer();
     if (this.isRecording && this.recordManager) {
       try {
         this.recordManager.stop();
