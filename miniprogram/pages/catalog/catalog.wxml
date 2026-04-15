@@ -1,0 +1,10 @@
+<view class="wrap">
+  <view class="hint">请选择本次学习与考核的知识场景（由管理员分配可见范围）</view>
+  <block wx:for="{{flatList}}" wx:key="id">
+    <view class="card" data-id="{{item.id}}" bindtap="onPick">
+      <text class="unit">{{item.unitName}}</text>
+      <text class="name">{{item.name}}</text>
+    </view>
+  </block>
+  <view wx:if="{{!flatList.length}}" class="empty">暂无可选场景，请联系管理员</view>
+</view>

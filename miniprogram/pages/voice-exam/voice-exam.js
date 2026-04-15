@@ -1,5 +1,6 @@
 const { request } = require('../../utils/api');
 const plugin = requirePlugin('WechatSI');
+const app = getApp();
 
 Page({
   data: {
@@ -18,6 +19,11 @@ Page({
   recoverTimer: null,
 
   onLoad() {
+    if (!app.globalData.selectedSubUnitId) {
+      wx.showToast({ title: '请先选择知识场景', icon: 'none' });
+      setTimeout(() => wx.navigateBack(), 800);
+      return;
+    }
     this.recordManager = plugin.getRecordRecognitionManager();
     this.innerAudioContext = wx.createInnerAudioContext();
     this.setupRecorder();

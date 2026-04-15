@@ -1,23 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const llm = require('../services/llm');
-const fs = require('fs');
-const path = require('path');
+const kc = require('../services/knowledgeCatalog');
+const { requireSubUnit } = require('../middleware/subUnit');
 
-const patients = require('../data/patients.json');
-const knowledge = fs.readFileSync(path.join(__dirname, '../data/knowledge.md'), 'utf-8');
-
-// 获取患者列表
-router.get('/patients', (req, res) => {
-  res.json(patients.map(p => ({
-    id: p.id, name: p.name, age: p.age, gender: p.gender,
-    diagnosis: p.diagnosis, medication: p.medication
-  })));
+router.get('/patients', requireSubUnit, (req, res) => {
+  try {
+    const patients = kc.loadPatientsForSubUnit(req.subUnitId);
+    res.json(patients.map(p => ({
+      id: p.id, name: p.name, age: p.age, gender: p.gender,
+      diagnosis: p.diagnosis, medication: p.medication
+    })));
+  } catch (e) {
+    res.status(500).json({ error: e.message || '加载患者列表失败' });
+  }
 });
 
-// 对话（练习/考核通用）
-router.post('/message', async (req, res) => {
+router.post('/message', requireSubUnit, async (req, res) => {
   const { patient_id, history, message } = req.body;
+  const patients = kc.loadPatientsForSubUnit(req.subUnitId);
   const patient = patients.find(p => p.id === patient_id);
   if (!patient) return res.status(400).json({ error: '患者不存在' });
 

@@ -36,18 +36,21 @@ Page({
   async viewDetail(e) {
     const id = e.currentTarget.dataset.id;
     const detail = await request(`/exam/detail/${id}`);
+    const dimensions = (detail.dimensions && detail.dimensions.length)
+      ? detail.dimensions
+      : [
+        { key: 'need_discovery', name: '核心需求挖掘' },
+        { key: 'wearing_plan', name: '佩戴方案合理性' },
+        { key: 'professionalism', name: '专业度展示' },
+        { key: 'communication_efficiency', name: '沟通效率' }
+      ];
     wx.navigateTo({
       url: `/pages/result/result?data=${encodeURIComponent(JSON.stringify({
         total: detail.score,
         passed: detail.passed,
         scores: detail.deductions,
-        summary: '',
-        dimensions: [
-          { key: 'pain_point', name: '痛点识别' },
-          { key: 'value_match', name: 'CGM价值匹配' },
-          { key: 'communication', name: '沟通话术' },
-          { key: 'conversion', name: '转化引导' }
-        ]
+        summary: detail.summary || '',
+        dimensions
       }))}`
     });
   }

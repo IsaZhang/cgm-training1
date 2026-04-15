@@ -33,7 +33,7 @@ npm start
 
 ## 3. 导入员工数据
 
-服务启动后，导入437个员工数据：
+服务启动后，导入员工数据（`employees` 数组每项可含可选字段 `role_id`、`allowed_subunit_ids`；后者可为字符串如 `cgm-transform,cgm-agp-reading` 或字符串数组，缺省为学员 + 默认子单元）：
 
 ```bash
 curl -X POST http://localhost:3000/api/auth/employees/import \
@@ -70,5 +70,10 @@ curl http://localhost:3000/
 - users.json - 用户数据
 - flashcard_progress.json - 学习进度
 - exam_records.json - 考核记录
+- voice_sessions.json - 语音对话会话缓存（可丢失重建，建议备份）
 
-**重要**：定期备份store目录！
+可选：设置 `USE_SQLITE=1` 且执行 `npm install better-sqlite3` 后，上述业务表可迁移到 `store/app.sqlite`（启动时若库为空会从现有 `*.json` 导入）；加载失败则自动回退 JSON 文件模式。
+
+知识目录：`server/data/catalog.json`；每次在线保存成功前会备份到 `server/data/catalog-archive/`。内容包上传会先备份到 `server/data/_content_backups/`。
+
+**重要**：定期备份 `store/` 与 `server/data/`！

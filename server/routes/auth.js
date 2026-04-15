@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const db = require('../db');
+const kc = require('../services/knowledgeCatalog');
 const router = express.Router();
 
 router.post('/login', async (req, res) => {
@@ -49,8 +50,25 @@ function adminAuth(req, res, next) {
 
 router.post('/employees/import', adminAuth, async (req, res) => {
   const { employees } = req.body;
+  if (!Array.isArray(employees)) {
+    return res.status(400).json({ error: 'employees 必须为数组' });
+  }
   let count = 0;
-  for (const e of employees) {
+  const errors = [];
+  for (let i = 0; i < employees.length; i++) {
+    const e = employees[i];
+    if (!e || !e.phone || !e.name) {
+      errors.push({ index: i, error: '缺少 name 或 phone' });
+      continue;
+    }
+    const norm = kc.normalizeEmployeeAuthFields({
+      role_id: e.role_id,
+      allowed_subunit_ids: e.allowed_subunit_ids
+    });
+    if (norm.error) {
+      errors.push({ index: i, phone: e.phone, error: norm.error });
+      continue;
+    }
     const exists = await db.find('employees', x => x.phone === e.phone);
     if (!exists) {
       await db.insert('employees', {
@@ -58,12 +76,16 @@ router.post('/employees/import', adminAuth, async (req, res) => {
         phone: e.phone,
         city: e.city,
         department: e.department,
-        active: e.active !== undefined ? e.active : true
+        active: e.active !== undefined ? e.active : true,
+        role_id: norm.role_id,
+        allowed_subunit_ids: norm.allowed_subunit_ids
       });
       count++;
     }
   }
-  res.json({ imported: count, total: employees.length });
+  const payload = { imported: count, total: employees.length, skipped: errors.length };
+  if (errors.length) payload.errors = errors.slice(0, 100);
+  res.json(payload);
 });
 
 module.exports = { router, auth, adminAuth };

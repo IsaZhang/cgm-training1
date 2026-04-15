@@ -10,7 +10,10 @@
  *   node import-from-excel.js --api              # 调用导入 API（需服务运行）
  *   API_BASE=https://ai-cgm.phrones.com node import-from-excel.js --api  # 导入到线上
  * 
- * Excel 列映射: 姓名 -> name, 城市 -> city, 所属部门 -> department, 电话号码 -> phone
+ * Excel 列映射:
+ *   姓名 -> name, 城市 -> city, 所属部门 -> department, 电话号码 -> phone
+ * 可选列: 角色 / role_id / role -> role_id（如 learner、trainer）；
+ *        知识子单元 / allowed_subunit_ids / 可学场景 -> 逗号或分号分隔（如 cgm-transform,cgm-agp-reading）
  */
 
 const XLSX = require('xlsx');
@@ -25,6 +28,8 @@ const NAME_KEYS = ['姓名', '姓名-总', 'name'];
 const CITY_KEYS = ['城市', 'city'];
 const DEPT_KEYS = ['所属部门', '部门', 'department'];
 const PHONE_KEYS = ['电话号码', '手机号', 'phone'];
+const ROLE_KEYS = ['角色', 'role_id', 'role'];
+const SUBUNIT_KEYS = ['知识子单元', 'allowed_subunit_ids', '可学场景', '子单元', 'subunits'];
 
 function parseExcel(filePath) {
   const wb = XLSX.readFile(filePath);
@@ -39,10 +44,14 @@ function parseExcel(filePath) {
   const headerMap = {};
   header.forEach((h, i) => { headerMap[i] = String(h || '').trim(); });
 
-  const nameCol = NAME_KEYS.map(k => header.findIndex(h => String(h || '').includes(k) || String(h || '') === k)).find(i => i >= 0);
-  const cityCol = CITY_KEYS.map(k => header.findIndex(h => String(h || '').includes(k) || String(h || '') === k)).find(i => i >= 0);
-  const deptCol = DEPT_KEYS.map(k => header.findIndex(h => String(h || '').includes(k) || String(h || '') === k)).find(i => i >= 0);
-  const phoneCol = PHONE_KEYS.map(k => header.findIndex(h => String(h || '').includes(k) || String(h || '') === k)).find(i => i >= 0);
+  const findCol = (keys) =>
+    keys.map(k => header.findIndex(h => String(h || '').includes(k) || String(h || '') === k)).find(i => i >= 0);
+  const nameCol = findCol(NAME_KEYS);
+  const cityCol = findCol(CITY_KEYS);
+  const deptCol = findCol(DEPT_KEYS);
+  const phoneCol = findCol(PHONE_KEYS);
+  const roleCol = findCol(ROLE_KEYS);
+  const subunitCol = findCol(SUBUNIT_KEYS);
 
   if (nameCol < 0 || phoneCol < 0) {
     throw new Error('未找到姓名或电话号码列，表头: ' + JSON.stringify(header));
@@ -55,13 +64,22 @@ function parseExcel(filePath) {
     const phone = String(row[phoneCol] || '').replace(/\D/g, '');
     if (!name || !phone) continue;
 
-    employees.push({
+    const rowObj = {
       name,
       phone,
       city: (cityCol >= 0 ? String(row[cityCol] || '').trim() : '') || '-',
       department: (deptCol >= 0 ? String(row[deptCol] || '').trim() : '') || '-',
       active: true
-    });
+    };
+    if (roleCol >= 0) {
+      const rv = String(row[roleCol] || '').trim();
+      if (rv) rowObj.role_id = rv;
+    }
+    if (subunitCol >= 0) {
+      const sv = String(row[subunitCol] || '').trim();
+      if (sv) rowObj.allowed_subunit_ids = sv;
+    }
+    employees.push(rowObj);
   }
   return employees;
 }
@@ -125,6 +143,10 @@ async function main() {
   } else if (doApi) {
     const result = await callImportApi(employees);
     console.log(`API 导入完成: ${result.imported}/${result.total} 新员工`);
+    if (result.skipped) console.log(`校验未通过或未写入: ${result.skipped} 条`);
+    if (result.errors && result.errors.length) {
+      console.log('错误样例:', JSON.stringify(result.errors.slice(0, 5), null, 2));
+    }
   } else {
     console.log('请指定 --write（写入 store/employees.json）或 --api（调用导入接口）');
     console.log('示例:');

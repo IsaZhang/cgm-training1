@@ -8,6 +8,9 @@
 .agreement-text { margin: 0 4rpx; }
 .agreement-link { color: #4A90D9; text-decoration: underline; }
 .btn-disabled { opacity: 0.5; pointer-events: none; }
+.subunit-bar { padding: 16rpx 20rpx; margin-bottom: 20rpx; background: #eef5fc; border-radius: 12rpx; }
+.subunit-text { font-size: 26rpx; color: #4A90D9; }
+.subunit-text.warn { color: #c0392b; }
 .welcome { font-size: 34rpx; font-weight: bold; margin-bottom: 30rpx; }
 .menu-item { display: flex; align-items: center; flex-wrap: wrap; }
 .menu-icon { font-size: 44rpx; margin-right: 20rpx; }

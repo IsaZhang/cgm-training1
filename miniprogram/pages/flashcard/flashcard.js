@@ -1,4 +1,5 @@
 const { request } = require('../../utils/api');
+const app = getApp();
 
 Page({
   data: {
@@ -8,6 +9,11 @@ Page({
   },
 
   async onLoad() {
+    if (!app.globalData.selectedSubUnitId) {
+      wx.showToast({ title: '请先选择知识场景', icon: 'none' });
+      setTimeout(() => wx.navigateBack(), 800);
+      return;
+    }
     const cards = await request('/flashcard/list');
     const cats = Object.keys(cards);
     const progressRes = await request('/flashcard/progress');

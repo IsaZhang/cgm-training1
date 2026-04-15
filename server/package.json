@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node app.js",
+    "smoke": "node scripts/smoke-integration-test.js",
     "dev": "nodemon app.js",
     "init-employees": "node init-employees.js",
     "import-excel": "node import-from-excel.js",

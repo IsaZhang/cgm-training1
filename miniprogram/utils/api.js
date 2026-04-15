@@ -9,7 +9,10 @@ function request(url, options = {}) {
       data: options.data,
       header: {
         'Content-Type': 'application/json',
-        'x-token': app.globalData.token
+        'x-token': app.globalData.token,
+        ...(app.globalData.selectedSubUnitId
+          ? { 'x-sub-unit-id': app.globalData.selectedSubUnitId }
+          : {})
       },
       success: (res) => {
         if (res.statusCode === 401) {

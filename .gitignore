@@ -10,6 +10,9 @@ server/.env
 server/store/
 *.log
 
+# catalog 在线保存时生成的历史备份（运行时）
+server/data/catalog-archive/
+
 # macOS
 .DS_Store
 

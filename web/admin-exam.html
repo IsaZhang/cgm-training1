@@ -3,60 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>考试统计管理</title>
+  <title>培训与考试管理</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
     .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .header h1 { color: #333; margin-bottom: 10px; }
-    .login-box { background: white; padding: 40px; border-radius: 8px; max-width: 400px; margin: 100px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .login-box { background: white; padding: 40px; border-radius: 8px; max-width: 440px; margin: 80px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .login-box h2 { margin-bottom: 20px; color: #333; }
     .login-box input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; font-size: 14px; }
+    .login-box .hint { font-size: 12px; color: #888; margin: -8px 0 12px; }
     .login-box button { width: 100%; padding: 12px; background: #007aff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
     .login-box button:hover { background: #0056b3; }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .tab { padding: 10px 20px; background: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
     .tab.active { background: #007aff; color: white; }
     .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
     th { background: #f8f9fa; font-weight: 600; color: #333; }
     .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
     .badge.pass { background: #d4edda; color: #155724; }
     .badge.fail { background: #f8d7da; color: #721c24; }
     .hidden { display: none; }
     .logout-btn { float: right; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    .filters { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .filters { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     .filters input, .filters select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
     .filters button { padding: 8px 16px; color: white; border: none; border-radius: 4px; cursor: pointer; }
     .btn-primary { background: #007aff; }
     .btn-secondary { background: #6c757d; }
     .btn-success { background: #28a745; }
+    #employeeForm { margin-top: 16px; padding: 16px; border: 1px solid #eee; border-radius: 8px; background: #fafafa; }
+    #employeeForm label { display: block; margin: 8px 0 4px; font-size: 13px; color: #555; }
+    #employeeForm input[type="text"] { width: 100%; max-width: 360px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    #catalogJsonEditor { width: 100%; min-height: 420px; font-family: ui-monospace, monospace; font-size: 12px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; line-height: 1.45; }
   </style>
 </head>
 <body>
   <div id="loginBox" class="login-box">
     <h2>管理员登录</h2>
+    <p class="hint">API 默认使用当前站点 <code>/api</code>。本地打开文件时可填写完整地址，并会记住。</p>
+    <input type="text" id="adminApiBase" placeholder="可选：API 根路径，如 https://你的域名/api">
     <input type="password" id="adminToken" placeholder="请输入管理员密码">
-    <button onclick="login()">登录</button>
+    <button type="button" onclick="login()">登录</button>
   </div>
 
   <div id="mainContent" class="hidden">
     <div class="container">
       <div class="header">
-        <h1>CGM培训考试统计</h1>
-        <button class="logout-btn" onclick="logout()">退出</button>
+        <h1>培训与考试管理</h1>
+        <p style="color:#666;font-size:14px;margin-top:8px;">按知识单元 / 子单元筛选统计；员工角色与可见子单元在「员工管理」中配置。</p>
+        <button class="logout-btn" type="button" onclick="logout()">退出</button>
       </div>
 
       <div class="tabs">
-        <button class="tab active" onclick="switchTab('stats')">用户统计</button>
-        <button class="tab" onclick="switchTab('records')">考试记录</button>
+        <button type="button" class="tab active" data-tab="stats" onclick="switchTab('stats')">用户统计</button>
+        <button type="button" class="tab" data-tab="records" onclick="switchTab('records')">考试记录</button>
+        <button type="button" class="tab" data-tab="employees" onclick="switchTab('employees')">员工管理</button>
+        <button type="button" class="tab" data-tab="catalog" onclick="switchTab('catalog')">知识目录</button>
       </div>
 
       <div id="statsTab" class="card">
-        <h3 style="margin-bottom: 15px;">用户考试统计</h3>
+        <h3 style="margin-bottom: 15px;">用户考试统计（按员工维度）</h3>
         <div class="filters">
+          <select id="statsFilterUnit">
+            <option value="">全部知识单元</option>
+          </select>
+          <select id="statsFilterSubUnit">
+            <option value="">全部知识子单元</option>
+          </select>
           <select id="statsFilterCity">
             <option value="">全部城市</option>
           </select>
@@ -66,9 +82,10 @@
           <select id="statsFilterVoicePassedCases">
             <option value="">全部语音通过案例数</option>
           </select>
-          <button class="btn-primary" onclick="applyStatsFilters()">筛选</button>
-          <button class="btn-secondary" onclick="resetStatsFilters()">重置</button>
-          <button class="btn-success" onclick="downloadStatsCSV()">下载CSV</button>
+          <button type="button" class="btn-primary" onclick="refreshStatsFromServer()">按单元/子单元刷新</button>
+          <button type="button" class="btn-primary" onclick="filterStatsLocal()" style="background:#0056b3;">筛选城市部门</button>
+          <button type="button" class="btn-secondary" onclick="resetStatsFilters()">重置</button>
+          <button type="button" class="btn-success" onclick="downloadStatsCSV()">下载CSV</button>
         </div>
         <table id="statsTable">
           <thead>
@@ -84,11 +101,33 @@
           </thead>
           <tbody></tbody>
         </table>
+
+        <h3 style="margin: 28px 0 12px;">按知识子单元汇总</h3>
+        <table id="summarySubunitTable">
+          <thead>
+            <tr>
+              <th>知识子单元</th>
+              <th>单元ID</th>
+              <th>考试次数</th>
+              <th>通过次数</th>
+              <th>通过率</th>
+              <th>平均分</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
 
       <div id="recordsTab" class="card hidden">
-        <h3 style="margin-bottom: 15px;">所有考试记录</h3>
+        <h3 style="margin-bottom: 15px;">考试记录</h3>
         <div class="filters">
+          <select id="recordsFilterUnit">
+            <option value="">全部知识单元</option>
+          </select>
+          <select id="recordsFilterSubUnit">
+            <option value="">全部知识子单元</option>
+          </select>
+          <button type="button" class="btn-primary" onclick="loadRecords()">按单元筛选</button>
           <input type="text" id="filterName" placeholder="姓名">
           <select id="filterPatient">
             <option value="">全部患者类型</option>
@@ -105,25 +144,114 @@
           <input type="number" id="filterMaxScore" placeholder="最高分" style="width: 100px;">
           <input type="date" id="filterStartDate">
           <input type="date" id="filterEndDate">
-          <button class="btn-primary" onclick="applyFilters()">筛选</button>
-          <button class="btn-secondary" onclick="resetFilters()">重置</button>
-          <button class="btn-success" onclick="downloadCSV()">下载CSV</button>
+          <button type="button" class="btn-primary" onclick="applyFilters()">筛选</button>
+          <button type="button" class="btn-secondary" onclick="resetFilters()">重置</button>
+          <button type="button" class="btn-success" onclick="downloadCSV()">下载CSV</button>
         </div>
-        <table id="recordsTable">
+        <div style="overflow-x:auto;">
+          <table id="recordsTable">
+            <thead>
+              <tr>
+                <th>姓名</th>
+                <th>城市</th>
+                <th>部门</th>
+                <th>知识单元</th>
+                <th>知识子单元</th>
+                <th>患者类型</th>
+                <th>考试类型</th>
+                <th>分数</th>
+                <th>结果</th>
+                <th>时间</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="employeesTab" class="card hidden">
+        <h3 style="margin-bottom: 15px;">员工与角色</h3>
+        <p style="color:#666;font-size:14px;margin-bottom:12px;">角色与「可见知识子单元」决定学员端可选场景。内训师角色默认可访问全部子单元。</p>
+        <table id="employeesTable">
           <thead>
             <tr>
               <th>姓名</th>
+              <th>手机号</th>
               <th>城市</th>
               <th>部门</th>
-              <th>患者类型</th>
-              <th>考试类型</th>
-              <th>分数</th>
-              <th>结果</th>
-              <th>时间</th>
+              <th>状态</th>
+              <th>角色</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
+
+        <div id="employeeForm" class="hidden">
+          <h4 style="margin-bottom:10px;">编辑员工</h4>
+          <label>手机号（只读）</label>
+          <input type="text" id="empPhone" readonly>
+          <label>姓名</label>
+          <input type="text" id="empName">
+          <label>城市</label>
+          <input type="text" id="empCity">
+          <label>部门</label>
+          <input type="text" id="empDept">
+          <label><input type="checkbox" id="empActive"> 启用</label>
+          <label>角色</label>
+          <select id="empRole"></select>
+          <label>可见知识子单元</label>
+          <div id="empSubunits"></div>
+          <div style="margin-top:12px;">
+            <button type="button" class="btn-success" onclick="saveEmployee()">保存</button>
+            <button type="button" class="btn-secondary" onclick="cancelEmployeeEdit()">取消</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="catalogTab" class="card hidden">
+        <h3 style="margin-bottom: 10px;">知识目录（catalog.json）</h3>
+        <p style="color:#666;font-size:14px;margin-bottom:12px;">
+          读取/编辑 <code>catalog.json</code>；保存前校验结构及引用文件是否存在。每次成功保存会先备份当前文件到 <code>server/data/catalog-archive/</code>（保留最近若干份）。子单元/单元内容包可通过下方「文本上传」写入 <code>server/data/</code>（会先备份旧文件）。
+        </p>
+        <div class="filters" style="margin-bottom:12px;">
+          <button type="button" class="btn-primary" onclick="loadCatalogRaw()">重新加载</button>
+          <button type="button" class="btn-success" onclick="saveCatalogJson()">保存到服务器</button>
+        </div>
+
+        <h4 style="margin:20px 0 8px;">历史版本（catalog 备份）</h4>
+        <div class="filters" style="margin-bottom:8px;">
+          <button type="button" class="btn-secondary" onclick="loadCatalogVersions()">刷新列表</button>
+        </div>
+        <div style="overflow-x:auto;margin-bottom:16px;">
+          <table id="catalogVersionsTable" style="font-size:13px;">
+            <thead><tr><th>文件名</th><th>时间</th><th>大小</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <h4 style="margin:16px 0 8px;">上传子单元内容（JSON / Markdown 文本）</h4>
+        <p style="color:#666;font-size:13px;margin-bottom:8px;">选择本地 <code>patients.json</code> 与 <code>knowledge.md</code>（可只选其一），写入 catalog 中该子单元配置的路径。</p>
+        <div class="filters" style="align-items:flex-end;">
+          <label>知识子单元
+            <select id="catalogUploadSubUnitId" style="display:block;min-width:220px;margin-top:4px;padding:8px;"></select>
+          </label>
+          <label>patients.json <input type="file" id="uploadPatientsFile" accept=".json,application/json"></label>
+          <label>knowledge.md <input type="file" id="uploadKnowledgeFile" accept=".md,.txt,text/plain"></label>
+          <button type="button" class="btn-success" onclick="uploadSubunitContentJson()">上传</button>
+        </div>
+
+        <h4 style="margin:20px 0 8px;">上传知识单元闪卡（JSON 文本）</h4>
+        <div class="filters" style="align-items:flex-end;">
+          <label>知识单元
+            <select id="catalogUploadUnitId" style="display:block;min-width:180px;margin-top:4px;padding:8px;"></select>
+          </label>
+          <label>flashcards.json <input type="file" id="uploadFlashcardsFile" accept=".json,application/json"></label>
+          <button type="button" class="btn-primary" onclick="uploadUnitFlashcardsJson()">上传</button>
+        </div>
+
+        <h4 style="margin:24px 0 8px;">原始 JSON（高级）</h4>
+        <textarea id="catalogJsonEditor" spellcheck="false" placeholder="登录后点击「重新加载」"></textarea>
       </div>
     </div>
   </div>

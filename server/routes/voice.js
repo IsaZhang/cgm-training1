@@ -2,17 +2,15 @@ const express = require('express');
 const router = express.Router();
 const llm = require('../services/llm');
 const voiceService = require('../services/voice');
-const patients = require('../data/patients.json');
+const kc = require('../services/knowledgeCatalog');
+const { requireSubUnit } = require('../middleware/subUnit');
 
-// 存储会话上下文
-const sessions = new Map();
+const sessionStore = require('../services/voiceSessionStore');
 
-// 语音识别接口
 router.post('/recognize', async (req, res) => {
   const { fileId } = req.body;
 
   try {
-    // 调用阿里云语音识别服务
     const text = await recognizeSpeech(fileId);
     res.json({ text });
   } catch (e) {
@@ -20,16 +18,15 @@ router.post('/recognize', async (req, res) => {
   }
 });
 
-// 语音对话接口
-router.post('/chat', async (req, res) => {
+router.post('/chat', requireSubUnit, async (req, res) => {
   const { sessionId, patientId, history, message } = req.body;
+  const patients = kc.loadPatientsForSubUnit(req.subUnitId);
   const patient = patients.find(p => p.id === patientId);
 
   if (!patient) return res.status(400).json({ error: '患者不存在' });
 
   try {
     const safeHistory = Array.isArray(history) ? history : [];
-    // 构建对话消息
     const messages = [
       { role: 'system', content: patient.system_prompt },
       ...safeHistory.map(m => ({
@@ -39,14 +36,15 @@ router.post('/chat', async (req, res) => {
       ...(message ? [{ role: 'user', content: message }] : [])
     ];
 
-    // 获取AI回复
     const reply = await llm.chat(messages);
 
-    // 生成语音
     const audioUrl = await textToSpeech(reply);
 
-    // 保存会话
-    sessions.set(sessionId, { patientId, history: [...safeHistory, { role: 'patient', content: reply }] });
+    sessionStore.set(sessionId, {
+      patientId,
+      subUnitId: req.subUnitId,
+      history: [...safeHistory, { role: 'patient', content: reply }]
+    });
 
     res.json({ reply, audioUrl, sessionId });
   } catch (e) {
@@ -54,7 +52,6 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// 文字转语音接口
 router.post('/tts', async (req, res) => {
   const { text } = req.body;
   try {
@@ -65,12 +62,10 @@ router.post('/tts', async (req, res) => {
   }
 });
 
-// 语音识别实现（使用阿里云）
 async function recognizeSpeech(fileId) {
   return await voiceService.recognizeSpeech(fileId);
 }
 
-// 文字转语音实现（使用阿里云）
 async function textToSpeech(text) {
   return await voiceService.textToSpeech(text);
 }

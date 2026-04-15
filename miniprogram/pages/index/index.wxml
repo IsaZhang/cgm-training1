@@ -1,28 +1,28 @@
 <view class="container">
   <view class="logo-area">
-    <text class="title">CGM转化训练</text>
-    <text class="subtitle">照护师练习与考核平台</text>
+    <text class="title">{{ui.homeTitle}}</text>
+    <text class="subtitle">{{ui.homeSubtitle}}</text>
   </view>
 
   <block wx:if="{{!loggedIn && !showLogin}}">
     <view class="intro">
-      <text class="intro-text">专为照护师打造的CGM销售转化训练平台</text>
+      <text class="intro-text">{{ui.introLine}}</text>
     </view>
     <view class="menu">
       <view class="card menu-item" bindtap="goFlashcard">
         <text class="menu-icon">📖</text>
-        <text class="menu-title">闪卡学习</text>
-        <text class="menu-desc">CGM基础知识学习</text>
+        <text class="menu-title">{{ui.menuFlashcardTitle}}</text>
+        <text class="menu-desc">{{ui.menuFlashcardDesc}}</text>
       </view>
       <view class="card menu-item" bindtap="goExam">
         <text class="menu-icon">💬</text>
-        <text class="menu-title">留言考核</text>
-        <text class="menu-desc">文字对话考核，AI评分</text>
+        <text class="menu-title">{{ui.menuExamTitle}}</text>
+        <text class="menu-desc">{{ui.menuExamDesc}}</text>
       </view>
       <view class="card menu-item" bindtap="goVoiceExam">
         <text class="menu-icon">🎤</text>
-        <text class="menu-title">语音考核</text>
-        <text class="menu-desc">真实语音对话，更接近实战</text>
+        <text class="menu-title">{{ui.menuVoiceTitle}}</text>
+        <text class="menu-desc">{{ui.menuVoiceDesc}}</text>
       </view>
     </view>
     <view class="login-tip" bindtap="showLoginForm">登录后可查看考核记录</view>
@@ -46,26 +46,30 @@
 
   <block wx:if="{{loggedIn}}">
     <view class="welcome">你好，{{userInfo.name}}</view>
+    <view class="subunit-bar" bindtap="goPickSubUnit">
+      <text wx:if="{{hasSubUnit}}" class="subunit-text">当前场景已选择 · 点击更换</text>
+      <text wx:else class="subunit-text warn">尚未选择知识场景 · 请点击选择</text>
+    </view>
     <view class="menu">
       <view class="card menu-item" bindtap="goFlashcard">
         <text class="menu-icon">📖</text>
-        <text class="menu-title">闪卡学习</text>
-        <text class="menu-desc">CGM基础知识学习</text>
+        <text class="menu-title">{{ui.menuFlashcardTitle}}</text>
+        <text class="menu-desc">{{ui.menuFlashcardDesc}}</text>
       </view>
       <view class="card menu-item" bindtap="goExam">
         <text class="menu-icon">💬</text>
-        <text class="menu-title">留言考核</text>
-        <text class="menu-desc">文字对话考核，AI评分</text>
+        <text class="menu-title">{{ui.menuExamTitle}}</text>
+        <text class="menu-desc">{{ui.menuExamDesc}}</text>
       </view>
       <view class="card menu-item" bindtap="goVoiceExam">
         <text class="menu-icon">🎤</text>
-        <text class="menu-title">语音考核</text>
-        <text class="menu-desc">真实语音对话，更接近实战</text>
+        <text class="menu-title">{{ui.menuVoiceTitle}}</text>
+        <text class="menu-desc">{{ui.menuVoiceDesc}}</text>
       </view>
       <view class="card menu-item" bindtap="goHistory">
         <text class="menu-icon">📊</text>
-        <text class="menu-title">考核记录</text>
-        <text class="menu-desc">查看历史成绩和扣分详情</text>
+        <text class="menu-title">{{ui.menuHistoryTitle}}</text>
+        <text class="menu-desc">{{ui.menuHistoryDesc}}</text>
       </view>
     </view>
     <view class="logout" bindtap="logout">退出登录</view>

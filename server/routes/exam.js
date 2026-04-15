@@ -3,20 +3,25 @@ const router = express.Router();
 const db = require('../db');
 const { scoreConversation } = require('../services/scoring');
 const { adminAuth } = require('./auth');
+const { requireSubUnit } = require('../middleware/subUnit');
+const kc = require('../services/knowledgeCatalog');
 
-router.post('/submit', async (req, res) => {
+router.post('/submit', requireSubUnit, async (req, res) => {
   const { patient_type, conversation, exam_type } = req.body;
   const userId = req.user.id;
   try {
-    const result = await scoreConversation(patient_type, conversation);
+    const result = await scoreConversation(patient_type, conversation, req.subUnitId);
     const record = {
       id: Date.now().toString(),
       user_id: userId,
+      unit_id: req.unitId,
+      sub_unit_id: req.subUnitId,
       patient_type,
       exam_type: exam_type || 'text',
       score: result.total,
       passed: result.passed,
       deductions: result.scores,
+      dimensions: result.dimensions || [],
       conversation,
       created_at: new Date().toISOString()
     };
@@ -27,20 +32,23 @@ router.post('/submit', async (req, res) => {
   }
 });
 
-router.post('/submit-voice', async (req, res) => {
+router.post('/submit-voice', requireSubUnit, async (req, res) => {
   const { sessionId, patientType, conversation } = req.body;
   const userId = req.user.id;
   try {
-    const result = await scoreConversation(patientType, conversation);
+    const result = await scoreConversation(patientType, conversation, req.subUnitId);
     const record = {
       id: Date.now().toString(),
       user_id: userId,
+      unit_id: req.unitId,
+      sub_unit_id: req.subUnitId,
       session_id: sessionId,
       patient_type: patientType,
       exam_type: 'voice',
       score: result.total,
       passed: result.passed,
       deductions: result.scores,
+      dimensions: result.dimensions || [],
       conversation,
       created_at: new Date().toISOString()
     };
@@ -52,14 +60,20 @@ router.post('/submit-voice', async (req, res) => {
 });
 
 router.get('/history', async (req, res) => {
-  const rows = await db.filter('exam_records', r => r.user_id === req.user.id);
+  const subQ = req.query.sub_unit_id;
+  let rows = await db.filter('exam_records', r => r.user_id === req.user.id);
+  if (subQ) rows = rows.filter(r => r.sub_unit_id === subQ);
   rows.sort((a, b) => b.created_at.localeCompare(a.created_at));
   res.json(rows.map(r => ({
-    id: r.id, patient_type: r.patient_type, score: r.score,
+    id: r.id,
+    patient_type: r.patient_type,
+    score: r.score,
     passed: r.passed,
     deductions: r.deductions,
     exam_type: r.exam_type || (r.session_id && String(r.session_id).startsWith('voice_') ? 'voice' : 'text'),
-    created_at: r.created_at
+    created_at: r.created_at,
+    unit_id: r.unit_id,
+    sub_unit_id: r.sub_unit_id
   })));
 });
 
@@ -71,21 +85,32 @@ router.get('/detail/:id', async (req, res) => {
 
 router.get('/stats', async (req, res) => {
   const userId = req.user.id;
-  const records = await db.filter('exam_records', r => r.user_id === userId);
+  const subQ = req.query.sub_unit_id;
+  let records = await db.filter('exam_records', r => r.user_id === userId);
+  if (subQ) records = records.filter(r => r.sub_unit_id === subQ);
   records.sort((a, b) => a.created_at.localeCompare(b.created_at));
   const total = records.length;
   const passed = records.filter(r => r.passed).length;
   const firstPassIdx = records.findIndex(r => r.passed);
   res.json({
-    total_exams: total, passed,
+    total_exams: total,
+    passed,
     first_pass_attempt: firstPassIdx >= 0 ? firstPassIdx + 1 : null
   });
 });
 
-// 管理员路由（单独挂载，不经过 auth）
+function filterRecordsByAdminQuery(records, query) {
+  let out = records;
+  if (query.sub_unit_id) out = out.filter(r => r.sub_unit_id === query.sub_unit_id);
+  if (query.unit_id) out = out.filter(r => r.unit_id === query.unit_id);
+  return out;
+}
+
 const adminRouter = express.Router();
+
 adminRouter.get('/all-stats', adminAuth, async (req, res) => {
-  const records = await db.filter('exam_records', () => true);
+  let records = await db.filter('exam_records', () => true);
+  records = filterRecordsByAdminQuery(records, req.query);
   const users = await db.filter('users', () => true);
   const employees = await db.filter('employees', () => true);
 
@@ -148,16 +173,18 @@ adminRouter.get('/all-stats', adminAuth, async (req, res) => {
 
   res.json(result);
 });
+
 adminRouter.get('/all-records', adminAuth, async (req, res) => {
-  const records = await db.filter('exam_records', () => true);
+  let records = await db.filter('exam_records', () => true);
+  records = filterRecordsByAdminQuery(records, req.query);
   const users = await db.filter('users', () => true);
   const employees = await db.filter('employees', () => true);
 
   const userMap = {};
-  users.forEach(u => userMap[u.id] = u.name);
+  users.forEach(u => { userMap[u.id] = u.name; });
 
   const empMap = {};
-  employees.forEach(e => empMap[e.phone] = { city: e.city, department: e.department });
+  employees.forEach(e => { empMap[e.phone] = { city: e.city, department: e.department }; });
 
   const result = records.map(r => {
     const userName = userMap[r.user_id] || '未知';
@@ -173,11 +200,44 @@ adminRouter.get('/all-records', adminAuth, async (req, res) => {
       exam_type: r.exam_type,
       score: r.score,
       passed: r.passed,
-      created_at: r.created_at
+      created_at: r.created_at,
+      unit_id: r.unit_id || '',
+      sub_unit_id: r.sub_unit_id || ''
     };
   }).sort((a, b) => b.created_at.localeCompare(a.created_at));
 
   res.json(result);
+});
+
+adminRouter.get('/summary-by-subunit', adminAuth, async (req, res) => {
+  let records = await db.filter('exam_records', () => true);
+  records = filterRecordsByAdminQuery(records, req.query);
+  const map = {};
+  for (const r of records) {
+    const sid = r.sub_unit_id || 'unknown';
+    if (!map[sid]) {
+      map[sid] = {
+        sub_unit_id: sid,
+        unit_id: r.unit_id || '',
+        total: 0,
+        passed: 0,
+        sum_score: 0
+      };
+    }
+    map[sid].total++;
+    if (r.passed) map[sid].passed++;
+    map[sid].sum_score += Number(r.score) || 0;
+  }
+  const cat = kc.loadCatalog();
+  const subMeta = {};
+  cat.subunits.forEach(s => { subMeta[s.id] = s.name; });
+  const list = Object.values(map).map(x => ({
+    ...x,
+    sub_unit_name: subMeta[x.sub_unit_id] || x.sub_unit_id,
+    pass_rate: x.total > 0 ? Math.round((x.passed / x.total) * 100) : 0,
+    avg_score: x.total > 0 ? Math.round((x.sum_score / x.total) * 10) / 10 : 0
+  })).sort((a, b) => a.sub_unit_id.localeCompare(b.sub_unit_id));
+  res.json(list);
 });
 
 module.exports = { router, adminRouter };

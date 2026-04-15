@@ -1,0 +1,134 @@
+{
+  "version": 3,
+  "documentation": {
+    "zh": "架构约定：闪卡题库归属「知识单元」（覆盖该单元全部基础知识，如整本 CGM 知识）；患者脚本、knowledge 参考文、评分规则归属「知识子单元」（如仅 CGM转化 场景的对话与语音考核）。同一单元下多个子单元共用同一套闪卡与进度维度（unit_id）。"
+  },
+  "units": [
+    {
+      "id": "cgm",
+      "name": "CGM",
+      "description": "动态血糖监测相关基础知识（闪卡覆盖本单元全量知识）",
+      "order": 1,
+      "enabled": true,
+      "contentBundle": {
+        "flashcardsFile": "data/flashcards.json"
+      }
+    }
+  ],
+  "subunits": [
+    {
+      "id": "cgm-transform",
+      "unitId": "cgm",
+      "name": "CGM转化",
+      "slug": "cgm-transform",
+      "order": 1,
+      "enabled": true,
+      "contentBundle": {
+        "patientsFile": "data/patients.json",
+        "knowledgeFile": "data/knowledge.md",
+        "scoring": {
+          "promptProfile": "cgm_v1",
+          "passScore": 80,
+          "examinerLabel": "CGM转化培训考官",
+          "knowledgeSectionTitle": "CGM知识参考"
+        },
+        "ui": {
+          "navigationTitle": "照护训练",
+          "homeTitle": "照护师训练",
+          "homeSubtitle": "照护师练习与考核平台",
+          "introLine": "专为照护师打造的多场景销售转化训练平台",
+          "menuFlashcardTitle": "闪卡学习",
+          "menuFlashcardDesc": "CGM 知识单元 · 全量闪卡",
+          "menuExamTitle": "留言考核",
+          "menuExamDesc": "CGM转化 · 模拟患者对话",
+          "menuVoiceTitle": "语音考核",
+          "menuVoiceDesc": "CGM转化 · 语音对话",
+          "menuHistoryTitle": "考核记录",
+          "menuHistoryDesc": "查看历史成绩",
+          "historyDetailDimensions": [
+            {
+              "key": "need_discovery",
+              "name": "核心需求挖掘"
+            },
+            {
+              "key": "wearing_plan",
+              "name": "佩戴方案合理性"
+            },
+            {
+              "key": "professionalism",
+              "name": "专业度展示"
+            },
+            {
+              "key": "communication_efficiency",
+              "name": "沟通效率"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "cgm-agp-reading",
+      "unitId": "cgm",
+      "name": "CGM图谱解读",
+      "slug": "cgm-agp-reading",
+      "order": 2,
+      "enabled": true,
+      "contentBundle": {
+        "patientsFile": "data/subunits/cgm-agp-reading/patients.json",
+        "knowledgeFile": "data/subunits/cgm-agp-reading/knowledge.md",
+        "scoring": {
+          "promptProfile": "cgm_agp_v1",
+          "passScore": 80,
+          "examinerLabel": "CGM图谱解读培训考官",
+          "knowledgeSectionTitle": "AGP与图谱解读参考"
+        },
+        "ui": {
+          "navigationTitle": "图谱解读训练",
+          "homeTitle": "照护师训练",
+          "homeSubtitle": "照护师练习与考核平台",
+          "introLine": "CGM 知识单元 · 多应用场景训练",
+          "menuFlashcardTitle": "闪卡学习",
+          "menuFlashcardDesc": "CGM 知识单元 · 全量闪卡",
+          "menuExamTitle": "留言考核",
+          "menuExamDesc": "图谱解读 · 模拟患者对话",
+          "menuVoiceTitle": "语音考核",
+          "menuVoiceDesc": "图谱解读 · 语音对话",
+          "menuHistoryTitle": "考核记录",
+          "menuHistoryDesc": "查看历史成绩",
+          "historyDetailDimensions": [
+            {
+              "key": "graph_literacy",
+              "name": "读图与要素识别"
+            },
+            {
+              "key": "clinical_link",
+              "name": "指标与临床关联"
+            },
+            {
+              "key": "safety_education",
+              "name": "安全边界与患教"
+            },
+            {
+              "key": "communication_efficiency",
+              "name": "沟通条理性"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "roles": [
+    {
+      "id": "learner",
+      "name": "学员",
+      "description": "按分配的知识子单元学习考核",
+      "grantAllSubunits": false
+    },
+    {
+      "id": "trainer",
+      "name": "内训师",
+      "description": "可访问当前已上线的全部知识子单元",
+      "grantAllSubunits": true
+    }
+  ]
+}
