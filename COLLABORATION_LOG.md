@@ -112,4 +112,11 @@
 - **SQLite**：`server/db-sqlite.js`（`json_stores` 表）；`server/db.js` 在 `USE_SQLITE=1` 时尝试加载，失败回退 `db-json.js`。需自行执行 `npm install better-sqlite3`（原生模块）。
 - **说明**：`db-local.js` 现为对 `db-json.js` 的转发，避免重复维护。
 
+### 工作衔接：Git、同事 Review、待推送（2026-04-15）
+
+- **远程**：`origin` 已改为 SSH：`git@github.com:IsaZhang/cgm-training.git`（另保留 `cgm-training1` 远程未改）。HTTPS 推送在自动化环境可能因无交互凭据失败，请在本机已配置 GitHub SSH 密钥后执行 `git push origin main`。
+- **评审文档**：新增 [`docs/REVIEW_FOR_COLLEAGUES.md`](docs/REVIEW_FOR_COLLEAGUES.md)，供同事 Code Review（范围、关注点、`npm run smoke`、安全与 SSH 说明）；**勿将私钥写入仓库**。
+- **忽略规则**：`server/data/catalog-archive/` 已加入 `.gitignore`（运行时 catalog 备份不落库）。
+- **待办（负责人本地）**：确认 `main` 相对 `origin/main` 的提交均已推送；与同事同步评审入口与预发/验收计划（见 Review 文档 §7）。
+
 ---
