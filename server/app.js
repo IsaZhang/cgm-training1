@@ -11,6 +11,7 @@ const statsRoutes = require('./routes/stats');
 const knowledgeRoutes = require('./routes/knowledge');
 const employeesAdminRoutes = require('./routes/employeesAdmin');
 const knowledgeAdminUpload = require('./routes/knowledgeAdminUpload');
+const { requestLogger } = require('./middleware/requestLogger');
 const db = require('./db');
 const kc = require('./services/knowledgeCatalog');
 
@@ -38,6 +39,9 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true })); // 支持 form-urlencoded（curl -d）
+
+// 请求日志：按日期切分，异步追加到 server/store/request_logs_YYYY-MM-DD.jsonl
+app.use(requestLogger);
 
 // Web 管理后台静态文件（admin-exam.html 等）
 const publicDir = path.join(__dirname, 'public');
