@@ -149,6 +149,214 @@ function readFileAsText(file) {
   });
 }
 
+function openCatalogUsageModal() {
+  const el = document.getElementById('catalogUsageModal');
+  if (el) el.classList.remove('hidden');
+}
+
+function closeCatalogUsageModal() {
+  const el = document.getElementById('catalogUsageModal');
+  if (el) el.classList.add('hidden');
+}
+
+function triggerDownload(filename, text, mime) {
+  const blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/** RFC4180 风格，支持字段内换行与双引号转义 */
+function parseCsv(text) {
+  const rows = [];
+  const s = String(text).replace(/^\uFEFF/, '');
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  const flushRow = () => {
+    row.push(field);
+    field = '';
+    if (row.length && row.some(c => String(c).trim() !== '')) rows.push(row);
+    row = [];
+  };
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    const next = s[i + 1];
+    if (inQuotes) {
+      if (c === '"') {
+        if (next === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += c;
+      }
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = true;
+      continue;
+    }
+    if (c === ',') {
+      row.push(field);
+      field = '';
+      continue;
+    }
+    if (c === '\r' && next === '\n') {
+      flushRow();
+      i++;
+      continue;
+    }
+    if (c === '\n' || c === '\r') {
+      flushRow();
+      continue;
+    }
+    field += c;
+  }
+  flushRow();
+  return rows;
+}
+
+function escapeCsvField(val) {
+  if (val == null || val === '') return '';
+  const str = String(val);
+  if (/[",\r\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+  return str;
+}
+
+function stringifyCsv(headers, dataRows) {
+  const lines = [headers.map(escapeCsvField).join(',')];
+  for (const obj of dataRows) {
+    lines.push(headers.map(h => escapeCsvField(obj[h] != null ? obj[h] : '')).join(','));
+  }
+  return `\uFEFF${lines.join('\r\n')}`;
+}
+
+const PATIENT_CSV_HEADERS = [
+  'id', 'name', 'age', 'gender', 'diagnosis', 'medication', 'personality',
+  'pain_points', 'resistance', 'recommended_cgm_count', 'cgm_plan', 'conversion_keys', 'system_prompt'
+];
+const PATIENT_NUMERIC_FIELDS = new Set(['age', 'recommended_cgm_count']);
+const PATIENT_ARRAY_FIELDS = new Set(['pain_points', 'resistance', 'conversion_keys']);
+
+function parseListCell(raw) {
+  if (raw == null) return [];
+  const t = String(raw).trim();
+  if (!t) return [];
+  if (t.startsWith('[')) {
+    try {
+      const j = JSON.parse(t);
+      return Array.isArray(j) ? j.map(x => String(x)) : [];
+    } catch (_) { /* 按分隔符解析 */ }
+  }
+  return t.split(/[|｜;；]/).map(x => x.trim()).filter(Boolean);
+}
+
+function patientsCsvTextToJsonArray(text) {
+  const rows = parseCsv(text);
+  if (!rows.length) throw new Error('CSV 为空');
+  const headers = rows[0].map(h => String(h).trim());
+  if (!headers.length || !headers[0]) throw new Error('CSV 缺少表头');
+  const patients = [];
+  for (let r = 1; r < rows.length; r++) {
+    const cells = rows[r];
+    if (!cells || !cells.some(c => String(c).trim())) continue;
+    const obj = {};
+    headers.forEach((h, idx) => {
+      if (!h) return;
+      const cell = cells[idx];
+      if (cell === undefined || String(cell).trim() === '') return;
+      const v = String(cell).trim();
+      if (PATIENT_ARRAY_FIELDS.has(h)) {
+        obj[h] = parseListCell(v);
+      } else if (PATIENT_NUMERIC_FIELDS.has(h)) {
+        const n = Number(v);
+        if (!Number.isNaN(n)) obj[h] = n;
+      } else {
+        obj[h] = v;
+      }
+    });
+    if (obj.id) patients.push(obj);
+  }
+  if (!patients.length) throw new Error('CSV 中未解析到任何含 id 的患者行');
+  return patients;
+}
+
+const FLASHCARD_CSV_HEADERS = ['id', 'category', 'difficulty', 'front', 'back'];
+
+function flashcardsCsvTextToJsonArray(text) {
+  const rows = parseCsv(text);
+  if (!rows.length) throw new Error('CSV 为空');
+  const headers = rows[0].map(h => String(h).trim());
+  const idx = name => headers.indexOf(name);
+  const idIdx = idx('id');
+  const frontIdx = idx('front');
+  const backIdx = idx('back');
+  if (idIdx < 0 || frontIdx < 0 || backIdx < 0) {
+    throw new Error('闪卡 CSV 表头须包含 id、front、back（建议同时包含 category、difficulty）');
+  }
+  const catIdx = idx('category');
+  const diffIdx = idx('difficulty');
+  const list = [];
+  for (let r = 1; r < rows.length; r++) {
+    const cells = rows[r];
+    if (!cells || !cells.some(c => String(c).trim())) continue;
+    const id = cells[idIdx];
+    if (!String(id || '').trim()) continue;
+    const card = {
+      id: String(id).trim(),
+      front: String(cells[frontIdx] != null ? cells[frontIdx] : '').trim(),
+      back: String(cells[backIdx] != null ? cells[backIdx] : '').trim()
+    };
+    if (catIdx >= 0 && cells[catIdx] != null && String(cells[catIdx]).trim()) {
+      card.category = String(cells[catIdx]).trim();
+    }
+    if (diffIdx >= 0 && cells[diffIdx] != null && String(cells[diffIdx]).trim()) {
+      const d = parseInt(String(cells[diffIdx]).trim(), 10);
+      if (!Number.isNaN(d)) card.difficulty = d;
+    }
+    list.push(card);
+  }
+  if (!list.length) throw new Error('CSV 中未解析到有效闪卡行');
+  return list;
+}
+
+function downloadPatientsCsvTemplate() {
+  const example = {
+    id: 'example_patient_01',
+    name: '示例患者',
+    age: 45,
+    gender: '女',
+    diagnosis: '2型糖尿病',
+    medication: '二甲双胍',
+    personality: '对 CGM 不了解，担心费用',
+    pain_points: '扎手指麻烦|不了解餐后波动',
+    resistance: '觉得贵|怕麻烦',
+    recommended_cgm_count: 4,
+    cgm_plan: '第1台了解波动 → 第2台评估用药 → 第3台饮食谱 → 第4台自我管理',
+    conversion_keys: '减少扎手指|看趋势',
+    system_prompt: '你扮演一位45岁女性患者。每次口语回复1-2句。\n\n【要求】照护师介绍双方案时你愿意先听生活方式建议。'
+  };
+  const csv = stringifyCsv(PATIENT_CSV_HEADERS, [example]);
+  triggerDownload('patients-import-template.csv', csv, 'text/csv;charset=utf-8');
+}
+
+function downloadFlashcardsCsvTemplate() {
+  const example = {
+    id: 'example_01',
+    category: '基础概念',
+    difficulty: 1,
+    front: '示例：CGM 与指尖血的核心区别？',
+    back: '示例：CGM 关注趋势与波动；指尖血关注单次数值。两者用途不同。'
+  };
+  const csv = stringifyCsv(FLASHCARD_CSV_HEADERS, [example]);
+  triggerDownload('flashcards-import-template.csv', csv, 'text/csv;charset=utf-8');
+}
+
 async function loadCatalogVersions() {
   const tbody = document.querySelector('#catalogVersionsTable tbody');
   if (!tbody) return;
@@ -194,13 +402,31 @@ async function restoreCatalogVersion(filename) {
 async function uploadSubunitContentJson() {
   const subUnitId = document.getElementById('catalogUploadSubUnitId')?.value;
   const pf = document.getElementById('uploadPatientsFile')?.files[0];
+  const pcsv = document.getElementById('uploadPatientsCsvFile')?.files[0];
   const kf = document.getElementById('uploadKnowledgeFile')?.files[0];
   if (!subUnitId) return alert('请选择知识子单元');
+  if (pf && pcsv) return alert('患者数据请勿同时选择 patients.json 与 patients.csv');
   const body = { subUnitId };
-  if (pf) body.patientsJson = await readFileAsText(pf);
+  if (pf) {
+    const t = await readFileAsText(pf);
+    try {
+      JSON.parse(t);
+    } catch (e) {
+      return alert('patients.json 不是合法 JSON：' + e.message);
+    }
+    body.patientsJson = t;
+  }
+  if (pcsv) {
+    try {
+      const arr = patientsCsvTextToJsonArray(await readFileAsText(pcsv));
+      body.patientsJson = JSON.stringify(arr);
+    } catch (e) {
+      return alert('解析 patients.csv 失败：' + (e.message || String(e)));
+    }
+  }
   if (kf) body.knowledgeMarkdown = await readFileAsText(kf);
   if (body.patientsJson == null && body.knowledgeMarkdown == null) {
-    return alert('请至少选择一个文件');
+    return alert('请至少选择一个文件（患者 JSON/CSV 或 knowledge.md）');
   }
   try {
     await request('/knowledge/upload/subunit', {
@@ -216,9 +442,23 @@ async function uploadSubunitContentJson() {
 async function uploadUnitFlashcardsJson() {
   const unitId = document.getElementById('catalogUploadUnitId')?.value;
   const ff = document.getElementById('uploadFlashcardsFile')?.files[0];
-  if (!unitId || !ff) return alert('请选择知识单元与 flashcards.json');
+  const fcsv = document.getElementById('uploadFlashcardsCsvFile')?.files[0];
+  if (!unitId) return alert('请选择知识单元');
+  if (ff && fcsv) return alert('请勿同时选择 flashcards.json 与 flashcards.csv');
+  if (!ff && !fcsv) return alert('请选择 flashcards.json 或 flashcards.csv');
+  let flashcardsJson;
   try {
-    const flashcardsJson = await readFileAsText(ff);
+    if (ff) {
+      flashcardsJson = await readFileAsText(ff);
+    } else {
+      const arr = flashcardsCsvTextToJsonArray(await readFileAsText(fcsv));
+      flashcardsJson = JSON.stringify(arr);
+    }
+    JSON.parse(flashcardsJson);
+  } catch (e) {
+    return alert('读取或解析失败：' + (e.message || String(e)));
+  }
+  try {
     await request('/knowledge/upload/unit', {
       method: 'POST',
       body: JSON.stringify({ unitId, flashcardsJson })
@@ -251,14 +491,24 @@ async function refreshStatsFromServer() {
   await loadSummaryBySubunit();
 }
 
+function trimCell(s) {
+  if (s == null) return '';
+  return String(s).trim();
+}
+
 function filterStatsLocal() {
-  const city = document.getElementById('statsFilterCity').value;
-  const department = document.getElementById('statsFilterDepartment').value;
-  const voicePassedCases = document.getElementById('statsFilterVoicePassedCases').value;
+  const citySel = document.getElementById('statsFilterCity');
+  const deptSel = document.getElementById('statsFilterDepartment');
+  const voiceSel = document.getElementById('statsFilterVoicePassedCases');
+  if (!citySel || !deptSel || !voiceSel) return;
+
+  const city = trimCell(citySel.value);
+  const department = trimCell(deptSel.value);
+  const voicePassedCases = trimCell(voiceSel.value);
 
   filteredStats = allStats.filter(u => {
-    if (city && u.city !== city) return false;
-    if (department && u.department !== department) return false;
+    if (city && trimCell(u.city) !== city) return false;
+    if (department && trimCell(u.department) !== department) return false;
     if (voicePassedCases && String(u.voice_passed_cases) !== voicePassedCases) return false;
     return true;
   });
@@ -493,14 +743,27 @@ function downloadStatsCSV() {
 }
 
 function uniqueValues(values) {
-  return [...new Set(values.filter(value => value && value !== '-'))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+  const norm = values.map(v => {
+    if (v === undefined || v === null) return '';
+    return String(v).trim();
+  });
+  return [...new Set(norm.filter(s => s !== '' && s !== '-'))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 }
 
 function populateSelect(selectId, placeholder, values) {
   const select = document.getElementById(selectId);
-  select.innerHTML = `<option value="">${placeholder}</option>` + values.map(value => (
-    `<option value="${value}">${value}</option>`
-  )).join('');
+  if (!select) return;
+  select.textContent = '';
+  const ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = placeholder;
+  select.appendChild(ph);
+  for (const value of values) {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = value;
+    select.appendChild(opt);
+  }
 }
 
 function formatDateTime(value) {
@@ -546,7 +809,9 @@ function renderEmployees() {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">暂无员工</td></tr>';
     return;
   }
-  tbody.innerHTML = allEmployees.map(e => `
+  tbody.innerHTML = allEmployees.map(e => {
+    const phoneEnc = encodeURIComponent(String(e.phone));
+    return `
     <tr>
       <td>${e.name}</td>
       <td>${e.phone}</td>
@@ -554,26 +819,35 @@ function renderEmployees() {
       <td>${e.department || '-'}</td>
       <td>${e.active ? '启用' : '停用'}</td>
       <td>${e.role_name || e.role_id}</td>
-      <td><button class="btn-primary" style="padding:6px 12px;font-size:13px;" onclick="openEmployeeEdit('${e.phone}')">编辑</button></td>
-    </tr>
-  `).join('');
+      <td><button type="button" class="btn-primary btn-edit-employee" style="padding:6px 12px;font-size:13px;" data-phone="${phoneEnc}">编辑</button></td>
+    </tr>`;
+  }).join('');
 }
 
-window.openEmployeeEdit = function (phone) {
-  editingPhone = phone;
-  const e = allEmployees.find(x => x.phone === phone);
-  if (!e) return;
+function openEmployeeEdit(phone) {
+  const phoneStr = String(phone);
+  renderEmployeeRoleOptions();
+  renderEmployeeSubunitChecks();
+  editingPhone = phoneStr;
+  const e = allEmployees.find(x => String(x.phone) === phoneStr);
+  if (!e) {
+    alert('未找到该员工，请切换到其他标签页再回到「员工管理」以刷新列表。');
+    return;
+  }
   document.getElementById('empName').value = e.name;
   document.getElementById('empPhone').value = e.phone;
   document.getElementById('empCity').value = e.city || '';
   document.getElementById('empDept').value = e.department || '';
   document.getElementById('empActive').checked = !!e.active;
   document.getElementById('empRole').value = e.role_id || 'learner';
+  const allowed = new Set((e.allowed_subunit_ids || []).map(String));
   document.querySelectorAll('.emp-sub-cb').forEach(cb => {
-    cb.checked = (e.allowed_subunit_ids || []).includes(cb.value);
+    cb.checked = allowed.has(String(cb.value));
   });
-  document.getElementById('employeeForm').classList.remove('hidden');
-};
+  const form = document.getElementById('employeeForm');
+  form.classList.remove('hidden');
+  form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
 
 window.cancelEmployeeEdit = function () {
   editingPhone = null;
@@ -626,5 +900,26 @@ window.loadCatalogVersions = loadCatalogVersions;
 window.restoreCatalogVersion = restoreCatalogVersion;
 window.uploadSubunitContentJson = uploadSubunitContentJson;
 window.uploadUnitFlashcardsJson = uploadUnitFlashcardsJson;
+window.openCatalogUsageModal = openCatalogUsageModal;
+window.closeCatalogUsageModal = closeCatalogUsageModal;
+window.downloadPatientsCsvTemplate = downloadPatientsCsvTemplate;
+window.downloadFlashcardsCsvTemplate = downloadFlashcardsCsvTemplate;
 window.cancelEmployeeEdit = cancelEmployeeEdit;
 window.saveEmployee = saveEmployee;
+window.openEmployeeEdit = openEmployeeEdit;
+
+(function bindEmployeesEditClicks() {
+  const table = document.getElementById('employeesTable');
+  if (!table) return;
+  table.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('button.btn-edit-employee');
+    if (!btn) return;
+    const raw = btn.getAttribute('data-phone');
+    if (raw == null || raw === '') return;
+    let decoded = raw;
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch (_) { /* 使用 raw */ }
+    openEmployeeEdit(decoded);
+  });
+})();

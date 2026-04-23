@@ -38,6 +38,18 @@
     #employeeForm label { display: block; margin: 8px 0 4px; font-size: 13px; color: #555; }
     #employeeForm input[type="text"] { width: 100%; max-width: 360px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
     #catalogJsonEditor { width: 100%; min-height: 420px; font-family: ui-monospace, monospace; font-size: 12px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; line-height: 1.45; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; box-sizing: border-box; }
+    .modal-overlay.hidden { display: none !important; }
+    .modal-panel { background: #fff; max-width: 760px; width: 100%; max-height: 88vh; overflow-y: auto; border-radius: 10px; padding: 22px 26px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); box-sizing: border-box; }
+    .modal-panel h3 { margin: 0 0 14px; font-size: 18px; color: #222; }
+    .modal-panel h4 { margin: 18px 0 8px; font-size: 15px; color: #333; }
+    .modal-panel p, .modal-panel li { font-size: 14px; line-height: 1.65; color: #444; }
+    .modal-panel ul { margin: 6px 0 6px 1.2em; padding: 0; }
+    .modal-panel code { font-size: 12.5px; background: #f3f4f6; padding: 1px 5px; border-radius: 3px; }
+    .modal-close-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 14px; border-top: 1px solid #eee; }
+    .link-btn { background: none; border: none; color: #007aff; cursor: pointer; font-size: 13px; text-decoration: underline; padding: 0; }
+    .link-btn:hover { color: #0056b3; }
+    .upload-hint { color: #666; font-size: 12px; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -210,7 +222,10 @@
       </div>
 
       <div id="catalogTab" class="card hidden">
-        <h3 style="margin-bottom: 10px;">知识目录（catalog.json）</h3>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
+          <h3 style="margin:0;">知识目录（catalog.json）</h3>
+          <button type="button" class="btn-secondary" onclick="openCatalogUsageModal()">使用方法</button>
+        </div>
         <p style="color:#666;font-size:14px;margin-bottom:12px;">
           读取/编辑 <code>catalog.json</code>；保存前校验结构及引用文件是否存在。每次成功保存会先备份当前文件到 <code>server/data/catalog-archive/</code>（保留最近若干份）。子单元/单元内容包可通过下方「文本上传」写入 <code>server/data/</code>（会先备份旧文件）。
         </p>
@@ -230,28 +245,74 @@
           </table>
         </div>
 
-        <h4 style="margin:16px 0 8px;">上传子单元内容（JSON / Markdown 文本）</h4>
-        <p style="color:#666;font-size:13px;margin-bottom:8px;">选择本地 <code>patients.json</code> 与 <code>knowledge.md</code>（可只选其一），写入 catalog 中该子单元配置的路径。</p>
+        <h4 style="margin:16px 0 8px;">上传子单元内容（JSON / Markdown / CSV）</h4>
+        <p style="color:#666;font-size:13px;margin-bottom:8px;">选择知识子单元后，可上传 <code>patients.json</code> <strong>或</strong> 按模板填写的 <code>patients.csv</code>（二选一）；<code>knowledge.md</code> 仍为 Markdown 文件。可同时上传患者数据与知识库正文，也可只传其一。</p>
         <div class="filters" style="align-items:flex-end;">
           <label>知识子单元
             <select id="catalogUploadSubUnitId" style="display:block;min-width:220px;margin-top:4px;padding:8px;"></select>
           </label>
           <label>patients.json <input type="file" id="uploadPatientsFile" accept=".json,application/json"></label>
+          <label>patients.csv <input type="file" id="uploadPatientsCsvFile" accept=".csv,text/csv"></label>
+          <button type="button" class="link-btn" onclick="downloadPatientsCsvTemplate()">下载患者 CSV 模板</button>
           <label>knowledge.md <input type="file" id="uploadKnowledgeFile" accept=".md,.txt,text/plain"></label>
           <button type="button" class="btn-success" onclick="uploadSubunitContentJson()">上传</button>
         </div>
+        <p class="upload-hint">列表类字段（如痛点）在 CSV 中可用英文竖线 <code>|</code> 分隔，或写 JSON 数组如 <code>["a","b"]</code>。表头列名须与模板一致。</p>
 
-        <h4 style="margin:20px 0 8px;">上传知识单元闪卡（JSON 文本）</h4>
+        <h4 style="margin:20px 0 8px;">上传知识单元闪卡（JSON / CSV）</h4>
+        <p style="color:#666;font-size:13px;margin-bottom:8px;">可上传 <code>flashcards.json</code> 或按模板填写的 <code>flashcards.csv</code>（二选一）。</p>
         <div class="filters" style="align-items:flex-end;">
           <label>知识单元
             <select id="catalogUploadUnitId" style="display:block;min-width:180px;margin-top:4px;padding:8px;"></select>
           </label>
           <label>flashcards.json <input type="file" id="uploadFlashcardsFile" accept=".json,application/json"></label>
+          <label>flashcards.csv <input type="file" id="uploadFlashcardsCsvFile" accept=".csv,text/csv"></label>
+          <button type="button" class="link-btn" onclick="downloadFlashcardsCsvTemplate()">下载闪卡 CSV 模板</button>
           <button type="button" class="btn-primary" onclick="uploadUnitFlashcardsJson()">上传</button>
         </div>
 
         <h4 style="margin:24px 0 8px;">原始 JSON（高级）</h4>
         <textarea id="catalogJsonEditor" spellcheck="false" placeholder="登录后点击「重新加载」"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div id="catalogUsageModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="catalogUsageModalTitle" onclick="if(event.target===this)closeCatalogUsageModal()">
+    <div class="modal-panel" onclick="event.stopPropagation()">
+      <h3 id="catalogUsageModalTitle">知识目录 · 使用方法（多人协作）</h3>
+      <p>本页用于维护 <code>catalog.json</code> 及子单元/单元内容文件。多人使用时请先约定「谁改哪一块」，避免互相覆盖。</p>
+      <h4>1. 新增或调整「知识模块」结构（catalog）</h4>
+      <ul>
+        <li>在下方「原始 JSON」中编辑完整 catalog；或先在本地用编辑器改好再粘贴进来。</li>
+        <li>点击「保存到服务器」前，建议与负责同事确认当前 <code>version</code>，必要时让对方先「重新加载」再保存。</li>
+        <li>每次成功保存会自动备份到 <code>server/data/catalog-archive/</code>；误操作可在「历史版本」中还原。</li>
+        <li>新增子单元时，需在 <code>contentBundle</code> 中配置 <code>patientsFile</code>、<code>knowledgeFile</code> 等路径，并确保对应文件已上传到服务器（见下文）。</li>
+      </ul>
+      <h4>2. 提交子单元「情景患者」数据（patients）</h4>
+      <ul>
+        <li><strong>JSON</strong>：上传与线上一致的 <code>patients.json</code> 数组结构。</li>
+        <li><strong>CSV</strong>：点击「下载患者 CSV 模板」，按表头列名填写；每行一名患者。<code>id</code> 必填。列表字段可用 <code>|</code> 分隔（如 <code>痛点1|痛点2</code>），也可使用 JSON 数组字符串。</li>
+        <li>患者 JSON 与患者 CSV <strong>不要同时选择</strong>，任选一种即可。</li>
+      </ul>
+      <h4>3. 提交子单元「知识库正文」（knowledge）</h4>
+      <ul>
+        <li>上传 <code>knowledge.md</code>（或 .txt），内容写入 catalog 中该子单元配置的 <code>knowledgeFile</code> 路径。</li>
+        <li>可与患者数据在同一次点击「上传」时一并提交（也可只传其一）。</li>
+      </ul>
+      <h4>4. 提交知识单元「闪卡」内容（flashcards）</h4>
+      <ul>
+        <li><strong>JSON</strong>：上传闪卡数组，字段与线上一致（如 <code>id</code>、<code>category</code>、<code>difficulty</code>、<code>front</code>、<code>back</code>）。</li>
+        <li><strong>CSV</strong>：点击「下载闪卡 CSV 模板」按列填写；<code>difficulty</code> 为整数。</li>
+        <li>JSON 与 CSV <strong>不要同时选择</strong>。</li>
+      </ul>
+      <h4>5. 协作与安全提示</h4>
+      <ul>
+        <li>上传子单元/单元内容前，服务器会备份将被覆盖的旧文件到 <code>data/_content_backups/</code>。</li>
+        <li>大段文案（如 <code>system_prompt</code>）在 CSV 中请放在双引号字段内，可换行；若用 Excel 编辑，注意编码选 UTF-8。</li>
+        <li>若与微信/飞书传文件，优先使用 CSV 模板以减少 JSON 括号被聊天软件改坏的问题。</li>
+      </ul>
+      <div class="modal-close-row">
+        <button type="button" class="btn-secondary" onclick="closeCatalogUsageModal()">关闭</button>
       </div>
     </div>
   </div>

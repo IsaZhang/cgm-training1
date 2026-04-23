@@ -6,6 +6,23 @@ const { adminAuth } = require('./auth');
 const { requireSubUnit } = require('../middleware/subUnit');
 const kc = require('../services/knowledgeCatalog');
 
+/** 城市/部门等字段去首尾空格，与管理端下拉选项一致（Excel 导入常见尾随空格） */
+function trimEmpField(v) {
+  if (v == null) return '';
+  return String(v).trim();
+}
+
+function buildEmployeeGeoMap(employees) {
+  const empMap = {};
+  employees.forEach(e => {
+    empMap[e.phone] = {
+      city: trimEmpField(e.city),
+      department: trimEmpField(e.department)
+    };
+  });
+  return empMap;
+}
+
 router.post('/submit', requireSubUnit, async (req, res) => {
   const { patient_type, conversation, exam_type } = req.body;
   const userId = req.user.id;
@@ -114,10 +131,7 @@ adminRouter.get('/all-stats', adminAuth, async (req, res) => {
   const users = await db.filter('users', () => true);
   const employees = await db.filter('employees', () => true);
 
-  const empMap = {};
-  employees.forEach(e => {
-    empMap[e.phone] = { city: e.city, department: e.department };
-  });
+  const empMap = buildEmployeeGeoMap(employees);
 
   const userStats = {};
   users.forEach(u => {
@@ -183,8 +197,7 @@ adminRouter.get('/all-records', adminAuth, async (req, res) => {
   const userMap = {};
   users.forEach(u => { userMap[u.id] = u.name; });
 
-  const empMap = {};
-  employees.forEach(e => { empMap[e.phone] = { city: e.city, department: e.department }; });
+  const empMap = buildEmployeeGeoMap(employees);
 
   const result = records.map(r => {
     const userName = userMap[r.user_id] || '未知';
