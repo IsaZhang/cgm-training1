@@ -8,7 +8,7 @@
  *   node import-from-excel.js ./data.xlsx        # 指定 Excel 文件
  *   node import-from-excel.js --write            # 直接写入 store/employees.json
  *   node import-from-excel.js --api              # 调用导入 API（需服务运行）
- *   API_BASE=https://ai-cgm.phrones.com node import-from-excel.js --api  # 导入到线上
+ *   API_BASE=https://ai-cgm.ihealthcn.com node import-from-excel.js --api  # 导入到线上
  * 
  * Excel 列映射:
  *   姓名 -> name, 城市 -> city, 所属部门 -> department, 电话号码 -> phone
@@ -152,7 +152,7 @@ async function main() {
     console.log('示例:');
     console.log('  node import-from-excel.js --write');
     console.log('  node import-from-excel.js --api');
-    console.log('  API_BASE=https://ai-cgm.phrones.com ADMIN_TOKEN=xxx node import-from-excel.js --api');
+    console.log('  API_BASE=https://ai-cgm.ihealthcn.com ADMIN_TOKEN=xxx node import-from-excel.js --api');
   }
 }
 

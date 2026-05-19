@@ -1,9 +1,9 @@
 #!/bin/bash
-# 在服务器上配置 HTTPS - ai-cgm.phrones.com
+# 在服务器上配置 HTTPS - ai-cgm.ihealthcn.com
 # 使用方式: 将此脚本上传到服务器后执行，或通过 ssh 远程执行
 
 set -e
-DOMAIN="ai-cgm.phrones.com"
+DOMAIN="ai-cgm.ihealthcn.com"
 WEBROOT="/var/www/html"
 
 echo "=== 配置 HTTPS  for $DOMAIN ==="
@@ -16,7 +16,7 @@ chown -R nginx:nginx $WEBROOT 2>/dev/null || chown -R www-data:www-data $WEBROOT
 cat > /etc/nginx/conf.d/cgm.conf << 'NGINX_HTTP'
 server {
     listen 80;
-    server_name ai-cgm.phrones.com;
+    server_name ai-cgm.ihealthcn.com;
     root /var/www/html;
     location /.well-known/acme-challenge/ {
         default_type "text/plain";

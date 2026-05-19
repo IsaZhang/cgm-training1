@@ -1,6 +1,6 @@
 #!/bin/bash
 # 完整部署：server + web 管理后台到 8.131.113.38
-# 域名: https://ai-cgm.phrones.com
+# 域名: https://ai-cgm.ihealthcn.com
 set -e
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,7 +33,7 @@ REMOTE="${SSH_USER}@${SSH_HOST}"
 echo ""
 echo "=========================================="
 echo "  CGM Training (server+web) 部署到 $REMOTE"
-echo "  域名: https://ai-cgm.phrones.com"
+echo "  域名: https://ai-cgm.ihealthcn.com"
 echo "=========================================="
 
 # 3. 测试 SSH 连接
@@ -79,6 +79,6 @@ echo ""
 echo "=========================================="
 echo "  部署完成！"
 echo "=========================================="
-echo "API 健康检查: curl https://ai-cgm.phrones.com/health"
-echo "管理后台:     https://ai-cgm.phrones.com/admin-exam.html"
+echo "API 健康检查: curl https://ai-cgm.ihealthcn.com/health"
+echo "管理后台:     https://ai-cgm.ihealthcn.com/admin-exam.html"
 echo ""

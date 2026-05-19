@@ -73,7 +73,7 @@ cd server
 │  否 → ./deploy-quick.sh（快速部署）   │
 └─────────────────────────────────────┘
     ↓
-验证：curl https://ai-cgm.phrones.com/health
+验证：curl https://ai-cgm.ihealthcn.com/health
 ```
 
 ---

@@ -6,7 +6,7 @@ function getApiBase() {
   if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') {
     return `${window.location.origin}/api`;
   }
-  return 'https://ai-cgm.phrones.com/api';
+  return 'https://ai-cgm.ihealthcn.com/api';
 }
 
 let adminToken = '';

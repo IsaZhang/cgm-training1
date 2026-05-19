@@ -73,7 +73,7 @@ ssh root@47.95.6.33 'docker exec cgm-training wget -qO- http://127.0.0.1:3000/he
 ssh root@47.95.6.33 'docker logs -f --tail 100 cgm-training'
 
 # 对外域名（如经 Traefik 暴露）
-curl https://ai-cgm.phrones.com/health
+curl https://ai-cgm.ihealthcn.com/health
 ```
 
 ## 持久性注意（重要）

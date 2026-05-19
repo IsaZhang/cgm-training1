@@ -28,4 +28,4 @@ ssh $SSH_OPTS $REMOTE "mv /tmp/cgm.conf /etc/nginx/conf.d/cgm.conf && nginx -t &
 echo "✓ Nginx 配置已更新并重载"
 echo ""
 echo "请在本地测试:"
-echo "  curl -X POST https://ai-cgm.phrones.com/api/auth/login -d 'name=测试员工&phone=13800000001'"
+echo "  curl -X POST https://ai-cgm.ihealthcn.com/api/auth/login -d 'name=测试员工&phone=13800000001'"
