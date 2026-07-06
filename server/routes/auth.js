@@ -36,7 +36,14 @@ async function auth(req, res, next) {
   if (!token) return res.status(401).json({ error: '请先登录' });
   const user = await db.find('users', u => u.token === token);
   if (!user) return res.status(401).json({ error: '登录已过期' });
+  // 离职/停用即时收权：员工 active=false 时，即使持有有效 token 也拒绝
+  // （为将来 rcpd 同步离职状态预留——同步把 active 置 false 即自动失效登录）
+  const employee = await db.find('employees', e => e.phone === user.phone);
+  if (!employee || employee.active === false) {
+    return res.status(401).json({ error: '账号已停用，请联系管理员' });
+  }
   req.user = user;
+  req.employee = employee;
   next();
 }
 
@@ -78,7 +85,10 @@ router.post('/employees/import', adminAuth, async (req, res) => {
         department: e.department,
         active: e.active !== undefined ? e.active : true,
         role_id: norm.role_id,
-        allowed_subunit_ids: norm.allowed_subunit_ids
+        allowed_subunit_ids: norm.allowed_subunit_ids,
+        // rcpd 对接预留：稳定外键与职级（同步时回填，不影响现有登录）
+        cde_id: e.cde_id || '',
+        job_level: e.job_level || ''
       });
       count++;
     }

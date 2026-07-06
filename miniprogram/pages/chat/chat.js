@@ -1,10 +1,32 @@
 const { request } = require('../../utils/api');
 const app = getApp();
 
+// 患者无自定义开场白时的兜底池（保持中性，不直接暴露顾虑，需照护师主动挖掘）
+const FALLBACK_OPENINGS = [
+  '化验单是给你吗？大夫让我到你这边来。', '我是坐这里吗？', '我先开药还是先听你讲？',
+  '这个药怎么吃啊？', '我下次得什么时候来？', '你好，我是来看糖尿病的。'
+];
+
+function pickOpening(patient) {
+  const pool = (patient && Array.isArray(patient.openings) && patient.openings.length)
+    ? patient.openings : FALLBACK_OPENINGS;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// 列表副标题：考官等非患者场景用 subtitle，患者场景回退到「年龄 性别 · 诊断」
+function buildSubtitle(p) {
+  if (p.subtitle) return p.subtitle;
+  const parts = [];
+  if (p.age) parts.push(`${p.age}岁`);
+  if (p.gender) parts.push(p.gender);
+  const head = parts.join(' ');
+  return p.diagnosis ? (head ? `${head} · ${p.diagnosis}` : p.diagnosis) : head;
+}
+
 Page({
   data: {
     started: false, patients: [],
-    patientId: '', patientName: '', messages: [],
+    patientId: '', patientName: '', roleLabel: '患者', messages: [],
     inputText: '', loading: false
   },
 
@@ -20,7 +42,7 @@ Page({
 
   async loadPatients() {
     const patients = await request('/chat/patients');
-    this.setData({ patients });
+    this.setData({ patients: (patients || []).map(p => ({ ...p, _subtitle: buildSubtitle(p) })) });
   },
 
   selectPatient(e) {
@@ -28,7 +50,8 @@ Page({
     const p = this.data.patients.find(x => x.id === id);
     this.setData({
       started: true, patientId: id, patientName: p.name,
-      messages: [{ role: 'patient', content: `你好，我是来看糖尿病的。（${p.diagnosis}）` }]
+      roleLabel: p.role_label || '患者',
+      messages: [{ role: 'patient', content: pickOpening(p) }]
     });
   },
 

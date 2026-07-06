@@ -1,7 +1,14 @@
 <view class="container">
+  <view wx:if="{{redLine}}" class="red-line-banner">
+    <text class="red-line-title">⛔ 触碰红线 · 本次判不合格</text>
+    <text class="red-line-type" wx:if="{{redLine.type && redLine.type !== '无'}}">类型：{{redLine.type}}</text>
+    <text class="red-line-evi" wx:if="{{redLine.evidence}}">{{redLine.evidence}}</text>
+  </view>
+
   <view class="score-area card">
     <text class="score {{passed ? 'pass' : 'fail'}}">{{total}}</text>
     <text class="score-label">{{passed ? '考核通过' : '未通过（80分及格）'}}</text>
+    <view wx:if="{{conversionRating}}" class="rating-badge {{ratingClass}}">综合评价：{{conversionRating}}</view>
   </view>
 
   <view class="card" wx:for="{{scoreList}}" wx:key="key">
@@ -12,8 +19,48 @@
     <text class="dim-comment">{{item.comment}}</text>
   </view>
 
+  <view class="card" wx:if="{{rootProblem}}">
+    <text class="dim-name">根本问题</text>
+    <text class="dim-comment">{{rootProblem}}</text>
+  </view>
+
+  <view class="card" wx:if="{{problemTags.length}}">
+    <text class="dim-name">问题标签</text>
+    <view class="tag-wrap">
+      <text class="tag" wx:for="{{problemTags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{listeningText}}">
+    <view class="dim-header">
+      <text class="dim-name">倾听匹配度</text>
+      <text class="dim-score">{{listeningText}}</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{mainlineList.length}}">
+    <text class="dim-name">转化主线评价</text>
+    <view class="mainline-item" wx:for="{{mainlineList}}" wx:key="name">
+      <view class="mainline-head">
+        <text class="mainline-name">{{item.name}}</text>
+        <text wx:if="{{item.level}}" class="mainline-level">{{item.level}}</text>
+      </view>
+      <text wx:if="{{item.basis}}" class="dim-comment">{{item.basis}}</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{keyEvidence}}">
+    <text class="dim-name">关键证据</text>
+    <text class="dim-comment">{{keyEvidence}}</text>
+  </view>
+
+  <view class="card" wx:if="{{suggestedActions}}">
+    <text class="dim-name">建议动作</text>
+    <text class="dim-comment">{{suggestedActions}}</text>
+  </view>
+
   <view class="card" wx:if="{{summary}}">
-    <text class="dim-name">总体评价</text>
+    <text class="dim-name">分析结论</text>
     <text class="dim-comment">{{summary}}</text>
   </view>
 

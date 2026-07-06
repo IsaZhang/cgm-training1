@@ -16,6 +16,11 @@ function request(url, options = {}) {
       },
       success: (res) => {
         if (res.statusCode === 401) {
+          // 清除失效的登录态，避免持续携带过期 token 反复 401
+          app.globalData.token = '';
+          app.globalData.userInfo = null;
+          wx.removeStorageSync('token');
+          wx.removeStorageSync('userInfo');
           wx.redirectTo({ url: '/pages/index/index' });
           return reject(new Error('请先登录'));
         }

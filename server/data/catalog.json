@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 5,
   "documentation": {
     "zh": "架构约定：闪卡题库归属「知识单元」（覆盖该单元全部基础知识，如整本 CGM 知识）；患者脚本、knowledge 参考文、评分规则归属「知识子单元」（如仅 CGM转化 场景的对话与语音考核）。同一单元下多个子单元共用同一套闪卡与进度维度（unit_id）。"
   },
@@ -12,6 +12,16 @@
       "enabled": true,
       "contentBundle": {
         "flashcardsFile": "data/flashcards.json"
+      }
+    },
+    {
+      "id": "core",
+      "name": "核心理念与认知",
+      "description": "公司使命/愿景/价值观/核心模式/0-1/三梯队/包产到护（含理念闪卡）",
+      "order": 2,
+      "enabled": true,
+      "contentBundle": {
+        "flashcardsFile": "data/subunits/core-concept/flashcards.json"
       }
     }
   ],
@@ -47,20 +57,24 @@
           "menuHistoryDesc": "查看历史成绩",
           "historyDetailDimensions": [
             {
-              "key": "need_discovery",
-              "name": "核心需求挖掘"
+              "key": "conversion_mainline",
+              "name": "转化切入与主线"
             },
             {
-              "key": "wearing_plan",
-              "name": "佩戴方案合理性"
+              "key": "need_necessity",
+              "name": "管理必要性与痛点提炼"
             },
             {
-              "key": "professionalism",
-              "name": "专业度展示"
+              "key": "cgm_value_link",
+              "name": "CGM工具价值连接"
             },
             {
-              "key": "communication_efficiency",
-              "name": "沟通效率"
+              "key": "multi_device_cycle",
+              "name": "多台连续管理周期"
+            },
+            {
+              "key": "closing_objection",
+              "name": "方案收口与决策障碍处理"
             }
           ]
         }
@@ -111,6 +125,52 @@
             {
               "key": "communication_efficiency",
               "name": "沟通条理性"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "core-concept",
+      "unitId": "core",
+      "name": "核心理念与认知",
+      "slug": "core-concept",
+      "order": 1,
+      "enabled": true,
+      "contentBundle": {
+        "patientsFile": "data/subunits/core-concept/patients.json",
+        "knowledgeFile": "data/subunits/core-concept/knowledge.md",
+        "scoring": {
+          "promptProfile": "core_concept_v1",
+          "passScore": 80,
+          "examinerLabel": "核心理念考官",
+          "knowledgeSectionTitle": "核心理念参考"
+        },
+        "ui": {
+          "navigationTitle": "核心理念考核",
+          "homeTitle": "照护师训练",
+          "homeSubtitle": "核心理念与认知",
+          "introLine": "公司核心理念的理解与践行考核",
+          "menuFlashcardTitle": "理念闪卡",
+          "menuFlashcardDesc": "使命/价值观/核心模式 记忆卡",
+          "menuExamTitle": "理念问答（留言）",
+          "menuExamDesc": "考官提问 · 文字作答 · AI评分",
+          "menuVoiceTitle": "理念问答（语音）",
+          "menuVoiceDesc": "考官提问 · 语音作答 · AI评分",
+          "menuHistoryTitle": "考核记录",
+          "menuHistoryDesc": "查看历史成绩",
+          "historyDetailDimensions": [
+            {
+              "key": "core_facts",
+              "name": "核心概念与事实正确度"
+            },
+            {
+              "key": "understanding_depth",
+              "name": "理解深度"
+            },
+            {
+              "key": "practice_story",
+              "name": "践行故事"
             }
           ]
         }

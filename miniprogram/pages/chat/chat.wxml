@@ -6,8 +6,8 @@
         bindtap="selectPatient" data-id="{{item.id}}">
         <view style="flex:1">
           <text class="patient-name">{{item.name}}</text>
-          <view class="patient-info">{{item.age}}岁 {{item.gender}} · {{item.diagnosis}}</view>
-          <view class="patient-info">用药：{{item.medication}}</view>
+          <view class="patient-info" wx:if="{{item._subtitle}}">{{item._subtitle}}</view>
+          <view class="patient-info" wx:if="{{item.medication}}">用药：{{item.medication}}</view>
         </view>
         <text class="patient-tag">选择</text>
       </view>
@@ -22,7 +22,7 @@
           id="msg-{{index}}" class="msg {{item.role === 'nurse' ? 'msg-nurse' : 'msg-patient'}}">
           <view class="bubble">{{item.content}}</view>
         </view>
-        <view class="loading" wx:if="{{loading}}">患者思考中...</view>
+        <view class="loading" wx:if="{{loading}}">{{roleLabel}}思考中...</view>
       </view>
     </scroll-view>
     <view class="input-area">

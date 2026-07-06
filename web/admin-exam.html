@@ -71,6 +71,7 @@
 
       <div class="tabs">
         <button type="button" class="tab active" data-tab="stats" onclick="switchTab('stats')">用户统计</button>
+        <button type="button" class="tab" data-tab="completion" onclick="switchTab('completion')">完成情况</button>
         <button type="button" class="tab" data-tab="records" onclick="switchTab('records')">考试记录</button>
         <button type="button" class="tab" data-tab="employees" onclick="switchTab('employees')">员工管理</button>
         <button type="button" class="tab" data-tab="catalog" onclick="switchTab('catalog')">知识目录</button>
@@ -108,6 +109,7 @@
               <th>考试次数</th>
               <th>通过次数</th>
               <th>通过率</th>
+              <th>红线触碰</th>
               <th>语音通过案例数</th>
             </tr>
           </thead>
@@ -130,8 +132,45 @@
         </table>
       </div>
 
+      <div id="completionTab" class="card hidden">
+        <h3 style="margin-bottom: 15px;">完成情况（按员工 × 可见子单元）</h3>
+        <p style="color:#666;font-size:14px;margin-bottom:12px;">含从未考核的员工（尝试次数为 0），便于看出"谁还没考 / 没通过"。未通过的排在前面。</p>
+        <div class="filters">
+          <select id="completionFilterUnit" onchange="loadCompletion()"><option value="">全部知识单元</option></select>
+          <select id="completionFilterSubUnit" onchange="loadCompletion()"><option value="">全部知识子单元</option></select>
+          <select id="completionFilterStatus" onchange="renderCompletionFiltered()">
+            <option value="">全部状态</option>
+            <option value="not_done">未考核</option>
+            <option value="not_passed">未通过</option>
+            <option value="passed">已通过</option>
+          </select>
+          <input type="text" id="completionFilterName" placeholder="姓名" oninput="renderCompletionFiltered()">
+          <button type="button" class="btn-primary" onclick="loadCompletion()">刷新</button>
+          <button type="button" class="btn-secondary" onclick="resetCompletionFilters()">重置</button>
+          <button type="button" class="btn-success" onclick="downloadCompletionCSV()">下载CSV</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="completionTable">
+            <thead>
+              <tr>
+                <th>姓名</th>
+                <th>城市</th>
+                <th>部门</th>
+                <th>知识子单元</th>
+                <th>尝试次数</th>
+                <th>状态</th>
+                <th>最高分</th>
+                <th>最近考核时间</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
       <div id="recordsTab" class="card hidden">
         <h3 style="margin-bottom: 15px;">考试记录</h3>
+        <p style="color:#666;font-size:13px;margin-bottom:10px;">点击任意一行可查看完整对话、各维度得分、评级、红线与改进建议。</p>
         <div class="filters">
           <select id="recordsFilterUnit">
             <option value="">全部知识单元</option>
@@ -142,10 +181,7 @@
           <button type="button" class="btn-primary" onclick="loadRecords()">按单元筛选</button>
           <input type="text" id="filterName" placeholder="姓名">
           <select id="filterPatient">
-            <option value="">全部患者类型</option>
-            <option value="1型">1型</option>
-            <option value="2型">2型</option>
-            <option value="妊娠">妊娠</option>
+            <option value="">全部患者/场景</option>
           </select>
           <select id="filterExamType">
             <option value="">全部考试类型</option>
@@ -156,6 +192,7 @@
           <input type="number" id="filterMaxScore" placeholder="最高分" style="width: 100px;">
           <input type="date" id="filterStartDate">
           <input type="date" id="filterEndDate">
+          <label style="display:flex;align-items:center;gap:4px;font-size:14px;"><input type="checkbox" id="filterRedLine"> 只看触碰红线</label>
           <button type="button" class="btn-primary" onclick="applyFilters()">筛选</button>
           <button type="button" class="btn-secondary" onclick="resetFilters()">重置</button>
           <button type="button" class="btn-success" onclick="downloadCSV()">下载CSV</button>
@@ -209,6 +246,10 @@
           <input type="text" id="empCity">
           <label>部门</label>
           <input type="text" id="empDept">
+          <label>职级 job_level <span style="color:#999;font-size:12px;">（rcpd 对接预留，可留空）</span></label>
+          <input type="text" id="empJobLevel">
+          <label>cdeId <span style="color:#999;font-size:12px;">（rcpd 稳定外键，可留空）</span></label>
+          <input type="text" id="empCdeId">
           <label><input type="checkbox" id="empActive"> 启用</label>
           <label>角色</label>
           <select id="empRole"></select>
@@ -273,6 +314,16 @@
 
         <h4 style="margin:24px 0 8px;">原始 JSON（高级）</h4>
         <textarea id="catalogJsonEditor" spellcheck="false" placeholder="登录后点击「重新加载」"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div id="recordDetailModal" class="modal-overlay hidden" role="dialog" aria-modal="true" onclick="if(event.target===this)closeRecordDetail()">
+    <div class="modal-panel" onclick="event.stopPropagation()">
+      <h3>考核详情</h3>
+      <div id="recordDetailBody"></div>
+      <div class="modal-close-row">
+        <button type="button" class="btn-secondary" onclick="closeRecordDetail()">关闭</button>
       </div>
     </div>
   </div>

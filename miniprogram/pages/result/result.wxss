@@ -7,3 +7,21 @@
 .dim-name { font-size: 28rpx; font-weight: bold; }
 .dim-score { font-size: 28rpx; color: #4A90D9; }
 .dim-comment { font-size: 26rpx; color: #666; line-height: 1.5; }
+
+.red-line-banner { background: #e53935; color: #fff; border-radius: 12rpx; padding: 24rpx; margin-bottom: 20rpx; }
+.red-line-title { display: block; font-size: 30rpx; font-weight: bold; }
+.red-line-type { display: block; font-size: 26rpx; margin-top: 10rpx; }
+.red-line-evi { display: block; font-size: 24rpx; margin-top: 8rpx; opacity: 0.95; line-height: 1.5; }
+
+.rating-badge { display: inline-block; margin-top: 16rpx; padding: 6rpx 24rpx; border-radius: 28rpx; font-size: 26rpx; color: #fff; background: #ff9800; }
+.rating-badge.pass { background: #4caf50; }
+.rating-badge.warn { background: #ff9800; }
+.rating-badge.fail { background: #e53935; }
+
+.tag-wrap { display: flex; flex-wrap: wrap; margin-top: 8rpx; }
+.tag { display: inline-block; margin: 6rpx 10rpx 0 0; padding: 4rpx 16rpx; border-radius: 20rpx; font-size: 24rpx; color: #e53935; background: #fdecea; }
+
+.mainline-item { margin-top: 16rpx; }
+.mainline-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6rpx; }
+.mainline-name { font-size: 26rpx; color: #333; }
+.mainline-level { font-size: 24rpx; color: #4A90D9; }

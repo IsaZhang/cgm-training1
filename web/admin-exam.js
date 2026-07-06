@@ -1,5 +1,16 @@
 /* global localStorage, fetch, alert, document, URL, Blob */
 
+/** HTML 转义，防止表格/下拉中渲染的后端数据（姓名/城市/患者类型等）造成 XSS */
+function esc(v) {
+  if (v == null) return '';
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function getApiBase() {
   const saved = localStorage.getItem('adminApiBase');
   if (saved) return saved;
@@ -108,19 +119,29 @@ async function loadCatalog() {
   const recSub = document.getElementById('recordsFilterSubUnit');
   if (unitSel) {
     unitSel.innerHTML = '<option value="">全部知识单元</option>' +
-      catalog.units.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+      catalog.units.map(u => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('');
   }
   if (subSel) {
     subSel.innerHTML = '<option value="">全部知识子单元</option>' +
-      catalog.subunits.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      catalog.subunits.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
   }
   if (recUnit) {
     recUnit.innerHTML = '<option value="">全部知识单元</option>' +
-      catalog.units.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+      catalog.units.map(u => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('');
   }
   if (recSub) {
     recSub.innerHTML = '<option value="">全部知识子单元</option>' +
-      catalog.subunits.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      catalog.subunits.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+  }
+  const compUnit = document.getElementById('completionFilterUnit');
+  const compSub = document.getElementById('completionFilterSubUnit');
+  if (compUnit) {
+    compUnit.innerHTML = '<option value="">全部知识单元</option>' +
+      catalog.units.map(u => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('');
+  }
+  if (compSub) {
+    compSub.innerHTML = '<option value="">全部知识子单元</option>' +
+      catalog.subunits.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
   }
   renderEmployeeRoleOptions();
   renderEmployeeSubunitChecks();
@@ -132,11 +153,11 @@ function populateCatalogUploadSelectors() {
   const uu = document.getElementById('catalogUploadUnitId');
   if (su && catalog.subunits && catalog.subunits.length) {
     su.innerHTML = catalog.subunits
-      .map(s => `<option value="${s.id}">${s.name} (${s.id})</option>`)
+      .map(s => `<option value="${esc(s.id)}">${esc(s.name)} (${esc(s.id)})</option>`)
       .join('');
   }
   if (uu && catalog.units && catalog.units.length) {
-    uu.innerHTML = catalog.units.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+    uu.innerHTML = catalog.units.map(u => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('');
   }
 }
 
@@ -369,11 +390,11 @@ async function loadCatalogVersions() {
     }
     tbody.innerHTML = rows
       .map(v => {
-        const fn = JSON.stringify(v.filename);
+        const fn = esc(JSON.stringify(v.filename));
         return `<tr>
-        <td>${v.filename}</td>
-        <td>${v.mtime}</td>
-        <td>${v.size}</td>
+        <td>${esc(v.filename)}</td>
+        <td>${esc(v.mtime)}</td>
+        <td>${esc(v.size)}</td>
         <td><button type="button" class="btn-secondary" onclick="restoreCatalogVersion(${fn})">还原</button></td>
       </tr>`;
       })
@@ -527,12 +548,12 @@ async function loadSummaryBySubunit() {
     }
     tbody.innerHTML = rows.map(r => `
       <tr>
-        <td>${r.sub_unit_name || r.sub_unit_id}</td>
-        <td>${r.unit_id || '-'}</td>
-        <td>${r.total}</td>
-        <td>${r.passed}</td>
-        <td>${r.pass_rate}%</td>
-        <td>${r.avg_score}</td>
+        <td>${esc(r.sub_unit_name || r.sub_unit_id)}</td>
+        <td>${esc(r.unit_id || '-')}</td>
+        <td>${esc(r.total)}</td>
+        <td>${esc(r.passed)}</td>
+        <td>${esc(r.pass_rate)}%</td>
+        <td>${esc(r.avg_score)}</td>
       </tr>
     `).join('');
   } catch (e) {
@@ -543,19 +564,20 @@ async function loadSummaryBySubunit() {
 function renderStats(stats) {
   const tbody = document.querySelector('#statsTable tbody');
   if (!stats || stats.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999;">暂无数据</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">暂无数据</td></tr>';
     return;
   }
 
   tbody.innerHTML = stats.map(u => `
     <tr>
-      <td>${u.name}</td>
-      <td>${u.city}</td>
-      <td>${u.department}</td>
-      <td>${u.total}</td>
-      <td>${u.passed}</td>
-      <td>${u.pass_rate}%</td>
-      <td>${u.voice_passed_cases}/5</td>
+      <td>${esc(u.name)}</td>
+      <td>${esc(u.city)}</td>
+      <td>${esc(u.department)}</td>
+      <td>${esc(u.total)}</td>
+      <td>${esc(u.passed)}</td>
+      <td>${esc(u.pass_rate)}%</td>
+      <td>${Number(u.red_line_count) > 0 ? `<span class="badge fail">${esc(u.red_line_count)}</span>` : '0'}</td>
+      <td>${esc(u.voice_passed_cases)}/5</td>
     </tr>
   `).join('');
 }
@@ -579,7 +601,19 @@ function recordsQueryString() {
 async function loadRecords() {
   allRecords = await request('/exam/admin/all-records' + recordsQueryString());
   filteredRecords = [...allRecords];
+  populateRecordsPatientFilter(allRecords);
   renderRecords(filteredRecords);
+}
+
+// 患者/场景筛选项按当前数据动态生成（取代写死的 1型/2型/妊娠）
+function populateRecordsPatientFilter(records) {
+  const sel = document.getElementById('filterPatient');
+  if (!sel) return;
+  const cur = sel.value;
+  const types = [...new Set(records.map(r => r.patient_type).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh'));
+  sel.innerHTML = '<option value="">全部患者/场景</option>' +
+    types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  if (types.includes(cur)) sel.value = cur;
 }
 
 function renderRecords(records) {
@@ -589,16 +623,16 @@ function renderRecords(records) {
     return;
   }
   tbody.innerHTML = records.map(r => `
-    <tr>
-      <td>${r.user_name}</td>
-      <td>${r.city}</td>
-      <td>${r.department}</td>
-      <td>${r.unit_id || '-'}</td>
-      <td>${subunitLabel(r.sub_unit_id)}</td>
-      <td>${r.patient_type}</td>
+    <tr style="cursor:pointer;" onclick="openRecordDetail('${esc(r.id)}')">
+      <td>${esc(r.user_name)}</td>
+      <td>${esc(r.city)}</td>
+      <td>${esc(r.department)}</td>
+      <td>${esc(r.unit_id || '-')}</td>
+      <td>${esc(subunitLabel(r.sub_unit_id))}</td>
+      <td>${esc(r.patient_type)}</td>
       <td>${r.exam_type === 'voice' ? '语音' : '文字'}</td>
-      <td>${r.score}</td>
-      <td><span class="badge ${r.passed ? 'pass' : 'fail'}">${r.passed ? '通过' : '未通过'}</span></td>
+      <td>${esc(r.score)}</td>
+      <td><span class="badge ${r.passed ? 'pass' : 'fail'}">${r.passed ? '通过' : '未通过'}</span>${r.red_line_violated ? ' <span class="badge fail">红线</span>' : ''}</td>
       <td>${new Date(r.created_at).toLocaleString('zh-CN')}</td>
     </tr>
   `).join('');
@@ -609,18 +643,192 @@ function subunitLabel(id) {
   return s ? s.name : (id || '-');
 }
 
+// ============ 考核记录详情 ============
+const MAINLINE_NAMES = {
+  necessity: '血糖管理必要性', cgm: 'CGM/动态血糖引入', multi_device: '多台连续管理周期',
+  online_mgmt: '线上管理/APP/随访', followup: '复诊/检查/调药跟进', other: '其他转化主线'
+};
+
+async function openRecordDetail(id) {
+  const body = document.getElementById('recordDetailBody');
+  body.innerHTML = '<p style="color:#999;">加载中...</p>';
+  document.getElementById('recordDetailModal').classList.remove('hidden');
+  try {
+    const d = await request(`/exam/admin/detail/${encodeURIComponent(id)}`);
+    body.innerHTML = renderRecordDetail(d);
+  } catch (e) {
+    body.innerHTML = `<p style="color:#c00;">加载失败：${esc(e.message)}</p>`;
+  }
+}
+
+function closeRecordDetail() {
+  document.getElementById('recordDetailModal').classList.add('hidden');
+}
+
+function renderRecordDetail(d) {
+  const rl = d.red_line && d.red_line.violated;
+  let html = '';
+
+  if (rl) {
+    html += `<div style="background:#e53935;color:#fff;border-radius:8px;padding:12px 16px;margin-bottom:14px;">
+      <strong>⛔ 触碰红线 · 本次判不合格</strong>
+      ${d.red_line.type && d.red_line.type !== '无' ? `<div style="margin-top:6px;font-size:13px;">类型：${esc(d.red_line.type)}</div>` : ''}
+      ${d.red_line.evidence ? `<div style="margin-top:4px;font-size:13px;">${esc(d.red_line.evidence)}</div>` : ''}
+    </div>`;
+  }
+
+  html += `<table style="margin-bottom:14px;"><tbody>
+    <tr><th style="width:90px;">姓名</th><td>${esc(d.user_name)}</td><th style="width:90px;">子单元</th><td>${esc(subunitLabel(d.sub_unit_id))}</td></tr>
+    <tr><th>患者/场景</th><td>${esc(d.patient_type)}</td><th>考试类型</th><td>${d.exam_type === 'voice' ? '语音' : '文字'}</td></tr>
+    <tr><th>总分</th><td><strong>${esc(d.score)}</strong></td><th>结果</th><td><span class="badge ${d.passed ? 'pass' : 'fail'}">${d.passed ? '通过' : '未通过'}</span>${d.conversion_rating ? ` · ${esc(d.conversion_rating)}` : ''}</td></tr>
+    <tr><th>时间</th><td colspan="3">${esc(new Date(d.created_at).toLocaleString('zh-CN'))}</td></tr>
+  </tbody></table>`;
+
+  // 各维度得分
+  const dims = Array.isArray(d.dimensions) ? d.dimensions : [];
+  const dedu = d.deductions || {};
+  const dimKeys = Object.keys(dedu);
+  if (dimKeys.length) {
+    html += '<h4 style="margin:10px 0 6px;">各维度得分</h4><table><tbody>';
+    dimKeys.forEach(k => {
+      const s = dedu[k] || {};
+      const dim = dims.find(x => x.key === k);
+      html += `<tr><th style="width:200px;">${esc(dim ? dim.name : k)}</th><td style="width:70px;">${esc(s.score)}/${esc(s.max)}</td><td>${esc(s.comment || '')}</td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+
+  if (d.listening_score != null) html += `<p style="margin:10px 0;"><strong>倾听匹配度：</strong>${esc(d.listening_score)}/2</p>`;
+  if (Array.isArray(d.problem_tags) && d.problem_tags.length) html += `<p style="margin:10px 0;"><strong>问题标签：</strong>${d.problem_tags.map(t => `<span class="badge fail" style="margin-right:4px;">${esc(t)}</span>`).join('')}</p>`;
+  if (d.root_problem) html += `<p style="margin:10px 0;"><strong>根本问题：</strong>${esc(d.root_problem)}</p>`;
+
+  // 转化主线（仅转化考核有）
+  if (d.mainlines && typeof d.mainlines === 'object') {
+    const items = Object.keys(MAINLINE_NAMES)
+      .map(k => ({ name: MAINLINE_NAMES[k], ...(d.mainlines[k] || {}) }))
+      .filter(x => x.level || x.basis);
+    if (items.length) {
+      html += '<h4 style="margin:10px 0 6px;">转化主线评价</h4><table><tbody>';
+      items.forEach(it => { html += `<tr><th style="width:200px;">${esc(it.name)}</th><td style="width:90px;">${esc(it.level || '')}</td><td>${esc(it.basis || '')}</td></tr>`; });
+      html += '</tbody></table>';
+    }
+  }
+
+  if (d.key_evidence) html += `<p style="margin:10px 0;"><strong>关键证据：</strong>${esc(d.key_evidence)}</p>`;
+  if (d.suggested_actions) html += `<p style="margin:10px 0;"><strong>建议动作：</strong>${esc(d.suggested_actions)}</p>`;
+  if (d.summary) html += `<p style="margin:10px 0;"><strong>${d.mainlines ? '分析结论' : '总评'}：</strong>${esc(d.summary)}</p>`;
+
+  // 完整对话
+  const conv = Array.isArray(d.conversation) ? d.conversation : [];
+  if (conv.length) {
+    html += '<h4 style="margin:14px 0 6px;">完整对话</h4><div style="max-height:280px;overflow-y:auto;border:1px solid #eee;border-radius:6px;padding:10px;">';
+    conv.forEach(m => {
+      const who = m.role === 'nurse' ? '学员' : 'AI';
+      const color = m.role === 'nurse' ? '#007aff' : '#888';
+      html += `<div style="margin-bottom:8px;"><span style="color:${color};font-weight:600;">${who}：</span>${esc(m.content)}</div>`;
+    });
+    html += '</div>';
+  }
+
+  return html;
+}
+
+// ============ 完成情况总览 ============
+let allCompletion = [];
+
+function completionQueryString() {
+  const u = document.getElementById('completionFilterUnit')?.value || '';
+  const s = document.getElementById('completionFilterSubUnit')?.value || '';
+  const qs = new URLSearchParams();
+  if (u) qs.set('unit_id', u);
+  if (s) qs.set('sub_unit_id', s);
+  const q = qs.toString();
+  return q ? `?${q}` : '';
+}
+
+async function loadCompletion() {
+  allCompletion = await request('/exam/admin/completion' + completionQueryString());
+  renderCompletionFiltered();
+}
+
+function completionStatus(r) {
+  if (r.attempts === 0) return { label: '未考核', cls: 'fail', key: 'not_done' };
+  if (r.passed) return { label: '已通过', cls: 'pass', key: 'passed' };
+  return { label: '未通过', cls: 'fail', key: 'not_passed' };
+}
+
+function renderCompletionFiltered() {
+  const name = document.getElementById('completionFilterName').value.trim().toLowerCase();
+  const status = document.getElementById('completionFilterStatus').value;
+  const rows = allCompletion.filter(r => {
+    if (name && !String(r.name).toLowerCase().includes(name)) return false;
+    if (status && completionStatus(r).key !== status) return false;
+    return true;
+  });
+  renderCompletion(rows);
+}
+
+function renderCompletion(rows) {
+  const tbody = document.querySelector('#completionTable tbody');
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;">暂无数据</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const st = completionStatus(r);
+    return `<tr>
+      <td>${esc(r.name)}${r.registered ? '' : ' <span style="color:#999;font-size:12px;">(未登录过)</span>'}</td>
+      <td>${esc(r.city)}</td>
+      <td>${esc(r.department)}</td>
+      <td>${esc(r.sub_unit_name)}</td>
+      <td>${esc(r.attempts)}</td>
+      <td><span class="badge ${st.cls}">${st.label}</span></td>
+      <td>${r.best_score == null ? '-' : esc(r.best_score)}</td>
+      <td>${r.latest_at ? esc(new Date(r.latest_at).toLocaleString('zh-CN')) : '-'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function resetCompletionFilters() {
+  document.getElementById('completionFilterUnit').value = '';
+  document.getElementById('completionFilterSubUnit').value = '';
+  document.getElementById('completionFilterStatus').value = '';
+  document.getElementById('completionFilterName').value = '';
+  loadCompletion();
+}
+
+function downloadCompletionCSV() {
+  const headers = ['姓名', '城市', '部门', '知识子单元', '尝试次数', '状态', '最高分', '最近考核时间'];
+  const name = document.getElementById('completionFilterName').value.trim().toLowerCase();
+  const status = document.getElementById('completionFilterStatus').value;
+  const rows = allCompletion.filter(r => {
+    if (name && !String(r.name).toLowerCase().includes(name)) return false;
+    if (status && completionStatus(r).key !== status) return false;
+    return true;
+  }).map(r => [
+    r.name, r.city, r.department, r.sub_unit_name, r.attempts,
+    completionStatus(r).label, r.best_score == null ? '' : r.best_score,
+    r.latest_at ? new Date(r.latest_at).toLocaleString('zh-CN') : ''
+  ]);
+  downloadCsvFile(headers, rows, `完成情况_${new Date().toISOString().slice(0, 10)}.csv`);
+}
+
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
 
   document.getElementById('statsTab').classList.add('hidden');
+  document.getElementById('completionTab').classList.add('hidden');
   document.getElementById('recordsTab').classList.add('hidden');
   document.getElementById('employeesTab').classList.add('hidden');
   document.getElementById('catalogTab').classList.add('hidden');
 
   if (tab === 'stats') {
     document.getElementById('statsTab').classList.remove('hidden');
+  } else if (tab === 'completion') {
+    document.getElementById('completionTab').classList.remove('hidden');
+    loadCompletion();
   } else if (tab === 'records') {
     document.getElementById('recordsTab').classList.remove('hidden');
     loadRecords();
@@ -667,6 +875,7 @@ function applyFilters() {
   const maxScore = document.getElementById('filterMaxScore').value;
   const startDate = document.getElementById('filterStartDate').value;
   const endDate = document.getElementById('filterEndDate').value;
+  const redLineOnly = document.getElementById('filterRedLine').checked;
 
   filteredRecords = allRecords.filter(r => {
     if (name && !r.user_name.toLowerCase().includes(name)) return false;
@@ -676,6 +885,7 @@ function applyFilters() {
     if (maxScore && r.score > Number(maxScore)) return false;
     if (startDate && new Date(r.created_at) < new Date(startDate)) return false;
     if (endDate && new Date(r.created_at) > new Date(endDate + 'T23:59:59')) return false;
+    if (redLineOnly && !r.red_line_violated) return false;
     return true;
   });
 
@@ -690,6 +900,7 @@ function resetFilters() {
   document.getElementById('filterMaxScore').value = '';
   document.getElementById('filterStartDate').value = '';
   document.getElementById('filterEndDate').value = '';
+  document.getElementById('filterRedLine').checked = false;
   filteredRecords = [...allRecords];
   renderRecords(filteredRecords);
 }
@@ -727,7 +938,7 @@ async function resetStatsFilters() {
 }
 
 function downloadStatsCSV() {
-  const headers = ['姓名', '城市', '部门', '考试次数', '通过次数', '通过率', '语音通过案例数', '最近一次语音考试时间'];
+  const headers = ['姓名', '城市', '部门', '考试次数', '通过次数', '通过率', '红线触碰', '语音通过案例数', '最近一次语音考试时间'];
   const rows = filteredStats.map(u => [
     u.name,
     u.city,
@@ -735,6 +946,7 @@ function downloadStatsCSV() {
     u.total,
     u.passed,
     `${u.pass_rate}%`,
+    u.red_line_count || 0,
     `${u.voice_passed_cases}/5`,
     formatDateTime(u.latest_voice_exam_at)
   ]);
@@ -790,7 +1002,7 @@ async function loadEmployees() {
 function renderEmployeeRoleOptions() {
   const sel = document.getElementById('empRole');
   if (!sel || !catalog.roles) return;
-  sel.innerHTML = catalog.roles.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+  sel.innerHTML = catalog.roles.map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('');
 }
 
 function renderEmployeeSubunitChecks() {
@@ -798,7 +1010,7 @@ function renderEmployeeSubunitChecks() {
   if (!box || !catalog.subunits) return;
   box.innerHTML = catalog.subunits.map(s => `
     <label style="display:block;margin:4px 0;">
-      <input type="checkbox" value="${s.id}" class="emp-sub-cb"> ${s.name} <span style="color:#999;font-size:12px;">(${s.id})</span>
+      <input type="checkbox" value="${esc(s.id)}" class="emp-sub-cb"> ${esc(s.name)} <span style="color:#999;font-size:12px;">(${esc(s.id)})</span>
     </label>
   `).join('');
 }
@@ -813,13 +1025,13 @@ function renderEmployees() {
     const phoneEnc = encodeURIComponent(String(e.phone));
     return `
     <tr>
-      <td>${e.name}</td>
-      <td>${e.phone}</td>
-      <td>${e.city || '-'}</td>
-      <td>${e.department || '-'}</td>
+      <td>${esc(e.name)}</td>
+      <td>${esc(e.phone)}</td>
+      <td>${esc(e.city || '-')}</td>
+      <td>${esc(e.department || '-')}</td>
       <td>${e.active ? '启用' : '停用'}</td>
-      <td>${e.role_name || e.role_id}</td>
-      <td><button type="button" class="btn-primary btn-edit-employee" style="padding:6px 12px;font-size:13px;" data-phone="${phoneEnc}">编辑</button></td>
+      <td>${esc(e.role_name || e.role_id)}</td>
+      <td><button type="button" class="btn-primary btn-edit-employee" style="padding:6px 12px;font-size:13px;" data-phone="${esc(phoneEnc)}">编辑</button></td>
     </tr>`;
   }).join('');
 }
@@ -838,6 +1050,8 @@ function openEmployeeEdit(phone) {
   document.getElementById('empPhone').value = e.phone;
   document.getElementById('empCity').value = e.city || '';
   document.getElementById('empDept').value = e.department || '';
+  document.getElementById('empJobLevel').value = e.job_level || '';
+  document.getElementById('empCdeId').value = e.cde_id || '';
   document.getElementById('empActive').checked = !!e.active;
   document.getElementById('empRole').value = e.role_id || 'learner';
   const allowed = new Set((e.allowed_subunit_ids || []).map(String));
@@ -868,7 +1082,9 @@ window.saveEmployee = async function () {
     department: document.getElementById('empDept').value.trim(),
     active: document.getElementById('empActive').checked,
     role_id: document.getElementById('empRole').value,
-    allowed_subunit_ids: allowed
+    allowed_subunit_ids: allowed,
+    job_level: document.getElementById('empJobLevel').value.trim(),
+    cde_id: document.getElementById('empCdeId').value.trim()
   };
   try {
     await request(`/employees/admin/${encodeURIComponent(editingPhone)}`, {
@@ -907,6 +1123,12 @@ window.downloadFlashcardsCsvTemplate = downloadFlashcardsCsvTemplate;
 window.cancelEmployeeEdit = cancelEmployeeEdit;
 window.saveEmployee = saveEmployee;
 window.openEmployeeEdit = openEmployeeEdit;
+window.openRecordDetail = openRecordDetail;
+window.closeRecordDetail = closeRecordDetail;
+window.loadCompletion = loadCompletion;
+window.renderCompletionFiltered = renderCompletionFiltered;
+window.resetCompletionFilters = resetCompletionFilters;
+window.downloadCompletionCSV = downloadCompletionCSV;
 
 (function bindEmployeesEditClicks() {
   const table = document.getElementById('employeesTable');

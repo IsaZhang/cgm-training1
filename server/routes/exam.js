@@ -23,6 +23,21 @@ function buildEmployeeGeoMap(employees) {
   return empMap;
 }
 
+/** 从评分结果中抽取需持久化的定性字段（转化质检），供历史详情/成绩页回放 */
+function pickQaFields(result) {
+  return {
+    summary: result.summary || '',
+    conversion_rating: result.conversion_rating || null,
+    listening_score: result.listening_score != null ? result.listening_score : null,
+    problem_tags: result.problem_tags || [],
+    root_problem: result.root_problem || '',
+    key_evidence: result.key_evidence || '',
+    suggested_actions: result.suggested_actions || '',
+    mainlines: result.mainlines || null,
+    red_line: result.red_line || null
+  };
+}
+
 router.post('/submit', requireSubUnit, async (req, res) => {
   const { patient_type, conversation, exam_type } = req.body;
   const userId = req.user.id;
@@ -39,6 +54,7 @@ router.post('/submit', requireSubUnit, async (req, res) => {
       passed: result.passed,
       deductions: result.scores,
       dimensions: result.dimensions || [],
+      ...pickQaFields(result),
       conversation,
       created_at: new Date().toISOString()
     };
@@ -66,6 +82,7 @@ router.post('/submit-voice', requireSubUnit, async (req, res) => {
       passed: result.passed,
       deductions: result.scores,
       dimensions: result.dimensions || [],
+      ...pickQaFields(result),
       conversation,
       created_at: new Date().toISOString()
     };
@@ -144,6 +161,7 @@ adminRouter.get('/all-stats', adminAuth, async (req, res) => {
       department: empInfo.department || '-',
       total: 0,
       passed: 0,
+      redLineCount: 0,
       voicePassedCases: new Set(),
       latestVoiceExamAt: null
     };
@@ -153,6 +171,7 @@ adminRouter.get('/all-stats', adminAuth, async (req, res) => {
     if (userStats[r.user_id]) {
       userStats[r.user_id].total++;
       if (r.passed) userStats[r.user_id].passed++;
+      if (r.red_line && r.red_line.violated) userStats[r.user_id].redLineCount++;
       if (r.exam_type === 'voice' && r.score >= 80) {
         userStats[r.user_id].voicePassedCases.add(r.patient_type);
       }
@@ -173,6 +192,7 @@ adminRouter.get('/all-stats', adminAuth, async (req, res) => {
     total: u.total,
     passed: u.passed,
     pass_rate: u.total > 0 ? Math.round((u.passed / u.total) * 100) : 0,
+    red_line_count: u.redLineCount,
     voice_passed_cases: u.voicePassedCases.size,
     latest_voice_exam_at: u.latestVoiceExamAt
   })).filter(u => u.total > 0)
@@ -213,6 +233,8 @@ adminRouter.get('/all-records', adminAuth, async (req, res) => {
       exam_type: r.exam_type,
       score: r.score,
       passed: r.passed,
+      conversion_rating: r.conversion_rating || '',
+      red_line_violated: !!(r.red_line && r.red_line.violated),
       created_at: r.created_at,
       unit_id: r.unit_id || '',
       sub_unit_id: r.sub_unit_id || ''
@@ -251,6 +273,76 @@ adminRouter.get('/summary-by-subunit', adminAuth, async (req, res) => {
     avg_score: x.total > 0 ? Math.round((x.sum_score / x.total) * 10) / 10 : 0
   })).sort((a, b) => a.sub_unit_id.localeCompare(b.sub_unit_id));
   res.json(list);
+});
+
+/** 管理员查看单条考核详情（完整对话 + 各维度分 + 评级 + 红线 + 建议） */
+adminRouter.get('/detail/:id', adminAuth, async (req, res) => {
+  const row = await db.find('exam_records', r => r.id === req.params.id);
+  if (!row) return res.status(404).json({ error: '记录不存在' });
+  const user = await db.find('users', u => u.id === row.user_id);
+  res.json({ ...row, user_name: user ? user.name : '未知' });
+});
+
+/**
+ * 完成情况总览：按 员工 × 其可见子单元 给出 尝试次数 / 是否通过 / 最高分 / 最近时间，
+ * 含从未考核者（attempts=0），便于看出"谁还没考/没过"。
+ */
+adminRouter.get('/completion', adminAuth, async (req, res) => {
+  const employees = await db.filter('employees', () => true);
+  const users = await db.filter('users', () => true);
+  const records = await db.filter('exam_records', () => true);
+
+  const userByPhone = {};
+  users.forEach(u => { userByPhone[u.phone] = u; });
+
+  const cat = kc.loadCatalog();
+  const subName = {};
+  const subUnitOf = {};
+  cat.subunits.forEach(s => { subName[s.id] = s.name; subUnitOf[s.id] = s.unitId; });
+
+  const wantSub = req.query.sub_unit_id || '';
+  const wantUnit = req.query.unit_id || '';
+
+  const rows = [];
+  for (const e of employees) {
+    let allowed = kc.getAllowedSubUnitIdsForEmployee(e);
+    if (wantSub) allowed = allowed.filter(id => id === wantSub);
+    if (wantUnit) allowed = allowed.filter(id => subUnitOf[id] === wantUnit);
+    const u = userByPhone[e.phone];
+    for (const sid of allowed) {
+      const recs = u ? records.filter(r => r.user_id === u.id && r.sub_unit_id === sid) : [];
+      let best = null;
+      let latest = null;
+      let passed = false;
+      for (const r of recs) {
+        const sc = Number(r.score) || 0;
+        if (best === null || sc > best) best = sc;
+        if (!latest || r.created_at > latest) latest = r.created_at;
+        if (r.passed) passed = true;
+      }
+      rows.push({
+        name: e.name,
+        phone: e.phone,
+        city: trimEmpField(e.city) || '-',
+        department: trimEmpField(e.department) || '-',
+        active: e.active !== false,
+        registered: !!u,
+        sub_unit_id: sid,
+        sub_unit_name: subName[sid] || sid,
+        unit_id: subUnitOf[sid] || '',
+        attempts: recs.length,
+        passed,
+        best_score: best,
+        latest_at: latest
+      });
+    }
+  }
+
+  rows.sort((a, b) => {
+    if (a.passed !== b.passed) return a.passed ? 1 : -1; // 未通过排前面
+    return a.name.localeCompare(b.name, 'zh');
+  });
+  res.json(rows);
 });
 
 module.exports = { router, adminRouter };

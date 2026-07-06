@@ -9,7 +9,13 @@ router.get('/patients', requireSubUnit, (req, res) => {
     const patients = kc.loadPatientsForSubUnit(req.subUnitId);
     res.json(patients.map(p => ({
       id: p.id, name: p.name, age: p.age, gender: p.gender,
-      diagnosis: p.diagnosis, medication: p.medication
+      diagnosis: p.diagnosis, medication: p.medication,
+      openings: Array.isArray(p.openings) ? p.openings : [],
+      // 通用展示字段（非患者场景，如「核心理念考官」用）
+      subtitle: p.subtitle || '',
+      role_label: p.role_label || '',
+      card_title: p.card_title || '',
+      card_lines: Array.isArray(p.card_lines) ? p.card_lines : []
     })));
   } catch (e) {
     res.status(500).json({ error: e.message || '加载患者列表失败' });
