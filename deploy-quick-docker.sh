@@ -1,6 +1,6 @@
 #!/bin/bash
 # 快速部署 web 端到 Docker 容器：更新 web + 同步代码到容器 + 重启，不执行 npm install
-# 适配新服务器 47.95.6.33，容器名 cgm-training
+# 适配服务器 120.46.213.63（deployer，已配 SSH 免密），容器名 cgm-training
 set -e
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,8 +8,8 @@ SERVER_DIR="$PROJECT_ROOT/server"
 WEB_DIR="$PROJECT_ROOT/web"
 PUBLIC_DIR="$SERVER_DIR/public"
 
-SSH_HOST=47.95.6.33
-SSH_USER=root
+SSH_HOST=120.46.213.63
+SSH_USER=deployer
 CONTAINER=cgm-training
 REMOTE_TMP=/tmp/cgm-training-deploy-$$
 SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=10"

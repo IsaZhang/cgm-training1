@@ -5,13 +5,13 @@ description: 快速部署 CGM Training 到新服务器的 Docker 容器：更新
 
 # 快速部署（Docker 容器版）
 
-本 skill 是**当前生产环境**的部署说明。项目已从老服务器（pm2，8.131.113.38）迁移到新服务器（Docker，47.95.6.33），运行在容器 `cgm-training` 中。对应脚本：项目根目录的 `deploy-quick-docker.sh`。
+本 skill 是**当前生产环境**的部署说明。项目已从老服务器（pm2，8.131.113.38）迁移到新服务器（Docker，120.46.213.63），运行在容器 `cgm-training` 中。对应脚本：项目根目录的 `deploy-quick-docker.sh`。
 
 ## 生产环境现状
 
 | 项 | 值 |
 |------|------|
-| 服务器 | `root@47.95.6.33`（已配置 SSH 免密） |
+| 服务器 | `deployer@120.46.213.63`（已配置 SSH 免密） |
 | 容器名 | `cgm-training` |
 | 镜像 | `cgm-training:latest` |
 | 容器内工作目录 | `/app` |
@@ -56,7 +56,7 @@ description: 快速部署 CGM Training 到新服务器的 Docker 容器：更新
 
 ## 前置条件
 
-1. **SSH 免密**：本机 `ssh root@47.95.6.33` 能直接登录
+1. **SSH 免密**：本机 `ssh deployer@120.46.213.63` 能直接登录（deployer 需在 docker 组或具备 sudo，才能执行 docker cp/restart/exec；容器 id 03737b878893）
 2. **目标主机已有 Docker 及容器** `cgm-training`（`docker ps` 可见）
 3. **容器可接受 docker cp**（目标是运行中的 `cgm-training`，非 stop 状态）
 
@@ -64,13 +64,13 @@ description: 快速部署 CGM Training 到新服务器的 Docker 容器：更新
 
 ```bash
 # 容器状态
-ssh root@47.95.6.33 'docker ps | grep cgm-training'
+ssh deployer@120.46.213.63 'docker ps | grep cgm-training'
 
 # 容器内健康检查
-ssh root@47.95.6.33 'docker exec cgm-training wget -qO- http://127.0.0.1:3000/health'
+ssh deployer@120.46.213.63 'docker exec cgm-training wget -qO- http://127.0.0.1:3000/health'
 
 # 实时日志
-ssh root@47.95.6.33 'docker logs -f --tail 100 cgm-training'
+ssh deployer@120.46.213.63 'docker logs -f --tail 100 cgm-training'
 
 # 对外域名（如经 Traefik 暴露）
 curl https://ai-cgm.ihealthcn.com/health
